@@ -77,7 +77,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
     }
 };
 
-class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVideo> {
+export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVideo> {
     private m_thumbnail: HTMLImageElement;
 
     constructor(parent: Node) {
@@ -155,7 +155,7 @@ class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVideo> {
     }
 };
 
-class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrappedCanvas> {
+export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrappedCanvas> {
     constructor(parent: Node) {
         super(parent);
     }
