@@ -1,3 +1,6 @@
+import { extractApps, mineElement } from "./miner"
+import { isValidSize } from "./util"
+
 interface AttrWrappedElement {
     width: string
     height: string
@@ -11,6 +14,7 @@ interface AttrWrappedVideo extends AttrWrappedElement {
 interface AttrWrappedCanvas extends AttrWrappedElement {
     innerWidth: number
     innerHeight: number
+    position: string
 };
 
 abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
@@ -23,7 +27,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
     protected abstract getPlaceholderData(): string;
     protected abstract storeAttrs(): A | null;
     protected abstract restoreAttrs(): void;
-    protected abstract beforePull(): void;
+    protected abstract beforePull(): boolean;
     protected abstract beforePush(): void;
     protected abstract fillter(e: NodeListOf<E>): E | null;
     public abstract loadElement(): E | null;
@@ -52,7 +56,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
             return;
         }
 
-        this.beforePull();
+        if (!this.beforePull()) return;
 
         parent.insertBefore(this.m_placeholder, this.m_elem);
         this.m_dstParent.appendChild(this.m_elem);
@@ -102,11 +106,15 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
             this.push();
         }
 
-        const elems = document.querySelectorAll("video");
-        if (elems.length === 0) {
-            return null;
-        }
-        return this.m_elem = this.fillter(elems);
+        const currentUrl = extractApps();
+        console.log("service: ", currentUrl);
+        return this.m_elem = mineElement[currentUrl].video();
+
+        // const elems = document.querySelectorAll("video");
+        // if (elems.length === 0) {
+        //     return null;
+        // }
+        // return this.m_elem = this.fillter(elems);
     }
 
     protected storeAttrs(): AttrWrappedVideo | null {
@@ -127,18 +135,23 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
         this.m_elem.style.top = this.m_oldAttrs.top;
     }
 
-    protected beforePull(): void {
-        if (!this.m_elem) return;
+    protected beforePull(): boolean {
+        if (!this.m_elem) return false;
         
         this.storeAttrs();
 
         const parent = this.m_elem.parentNode;
         if (!parent) {
-            return;
+            return false;
         }
 
-        this.m_thumbnail.src = this.m_elem.poster;
-        parent.insertBefore(this.m_thumbnail, this.m_elem);
+        if (this.m_elem.poster) {
+            this.m_thumbnail.src = this.m_elem.poster;
+            this.m_thumbnail.style.width = "100%";
+            this.m_thumbnail.style.height = "100%";
+            parent.insertBefore(this.m_thumbnail, this.m_elem);
+        }
+        return true;
     }
 
     protected beforePush(): void {
@@ -150,8 +163,8 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
         if (!parent) {
             return;
         }
-
-        parent.removeChild(this.m_thumbnail);
+        if (parent.contains(this.m_thumbnail))
+            parent.removeChild(this.m_thumbnail);
     }
 };
 
@@ -177,11 +190,14 @@ export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrapped
             this.push();
         }
 
-        const elems = document.querySelectorAll("canvas");
-        if (elems.length === 0) {
-            return null;
-        }
-        return this.m_elem = this.fillter(elems);
+        const currentUrl = extractApps();
+        console.log("service: ", currentUrl);
+        return this.m_elem = mineElement[currentUrl].canvas();
+        // const elems = document.querySelectorAll("canvas");
+        // if (elems.length === 0) {
+        //     return null;
+        // }
+        // return this.m_elem = this.fillter(elems);
     }
 
     protected storeAttrs(): AttrWrappedCanvas | null {
@@ -190,7 +206,8 @@ export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrapped
             width: this.m_elem.style.width,
             height: this.m_elem.style.height,
             innerWidth: this.m_elem.width,
-            innerHeight: this.m_elem.height
+            innerHeight: this.m_elem.height,
+            position: this.m_elem.style.position
         };
     }
 
@@ -200,10 +217,13 @@ export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrapped
         this.m_elem.style.height = this.m_oldAttrs.height;
         this.m_elem.width = this.m_oldAttrs.innerWidth;
         this.m_elem.height = this.m_oldAttrs.innerHeight;
+        this.m_elem.style.position = this.m_oldAttrs.position;
     }
 
-    protected beforePull(): void {
+    protected beforePull(): boolean {
+        if (!this.m_elem || (this.m_elem.width === 0 || this.m_elem.height === 0)) return false;
         this.storeAttrs();
+        return true;
     }
 
     protected beforePush(): void {

@@ -8,19 +8,45 @@ const True: Bool_T = 1;
 function b2bt(b: boolean): Bool_T { return b ? True : False; }
 
 class PlayButton {
-    private readonly m_elem: HTMLButtonElement;
+    private readonly m_elem: HTMLAnchorElement;
     private readonly PAUSED_TEXT: { [k in Bool_T]: string } = { 0: "Ⅱ", 1: "▶" };
 
-    constructor(button: HTMLButtonElement) {
-        this.m_elem = button;
-        this.m_elem.classList.add("ctrlleft");
+    get button() { return this.m_elem; }
+
+    constructor(document: Document) {
+        this.m_elem = document.createElement("a");
+        this.m_elem.classList.add("a-button", "playing");
+        this.m_elem.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=5722&format=png&color=ffffff" alt="play--v1" id="play-btn"><img width="24" height="24" src="https://img.icons8.com/?size=24&id=85882&format=png&color=ffffff" alt="pause--v1" id="pause-btn">`;
         this.setState(true);
     }
-
+    
     public setState(paused: boolean): void {
-        this.m_elem.innerText = this.PAUSED_TEXT[b2bt(paused)];
+        // this.m_elem.innerText = this.PAUSED_TEXT[b2bt(paused)];
+        if (paused) {
+            this.m_elem.classList.remove("playing");
+            this.m_elem.classList.add("pausing");
+        }
+        else {
+            this.m_elem.classList.remove("pausing");
+            this.m_elem.classList.add("playing");
+        }
     }
 };
+
+// class PlayButton {
+//     private readonly m_elem: HTMLButtonElement;
+//     private readonly PAUSED_TEXT: { [k in Bool_T]: string } = { 0: "Ⅱ", 1: "▶" };
+
+//     constructor(button: HTMLButtonElement) {
+//         this.m_elem = button;
+//         this.m_elem.classList.add("ctrlleft");
+//         this.setState(true);
+//     }
+
+//     public setState(paused: boolean): void {
+//         this.m_elem.innerText = this.PAUSED_TEXT[b2bt(paused)];
+//     }
+// };
 
 class TimeDisplay {
     private readonly m_elem: HTMLSpanElement;
@@ -29,11 +55,12 @@ class TimeDisplay {
     private m_formattedDuration: string = "00:00";
 
     private genFormatted(): string {
-        return `${this.m_currentFormattedTime} / ${this.m_formattedDuration}`;
+        return `${this.m_currentFormattedTime}/${this.m_formattedDuration}`;
     }
 
     constructor(display: HTMLSpanElement) {
         this.m_elem = display;
+        this.m_elem.id = "time-display";
         this.m_elem.classList.add("ctrlleft");
         this.m_elem.innerText = this.genFormatted();
     }
@@ -58,7 +85,7 @@ class TimeDisplay {
             const { t, s } = divby60(time);
 
             time = t;
-            formatted = s + (i !== 0) ? (":" + formatted) : "";
+            formatted = s + ((i !== 0) ? (":" + formatted) : "");
 
             if (t < 1) {
                 return (i === 0 ? "00:" : "") + formatted;
@@ -152,11 +179,12 @@ export class Control {
 
     private readonly m_control_frame: HTMLDivElement;
     
-    private readonly m_play_btn: HTMLButtonElement;
+    // private readonly m_play_btn: HTMLButtonElement;
+    private readonly m_play_btn: HTMLAnchorElement;
     private readonly m_time_display: HTMLSpanElement;
     private readonly m_video_slider: HTMLInputElement;
-    private readonly m_close_btn: HTMLButtonElement;
-    private readonly m_fit_btn: HTMLButtonElement;
+    // private readonly m_close_btn: HTMLButtonElement;
+    private readonly m_close_btn: HTMLAnchorElement;
 
     private readonly m_play_btn_handler: PlayButton;
     private readonly m_time_display_handler: TimeDisplay;
@@ -170,9 +198,13 @@ export class Control {
         const doc = wnd.document;
 
         this.m_control_frame = doc.createElement("div");
+        this.m_control_frame.id = "ctrler";
+        this.m_control_frame.classList.add("row-flex", "space-between-flex");
 
-        this.m_play_btn = doc.createElement("button");
-        this.m_play_btn_handler = new PlayButton(this.m_play_btn);
+        // this.m_play_btn = doc.createElement("button");
+        // this.m_play_btn_handler = new PlayButton(this.m_play_btn);
+        this.m_play_btn_handler = new PlayButton(doc);
+        this.m_play_btn = this.m_play_btn_handler.button;
         this.m_play_btn.addEventListener("pointerup", this.onClickPlayPause);
 
         this.m_time_display = doc.createElement("span");
@@ -182,21 +214,17 @@ export class Control {
         this.m_video_slider_handler = new VideoSlider(this.m_video_slider);
         this.m_video_slider.addEventListener("input", this.onSeek);
 
-        this.m_close_btn = doc.createElement("button");
-        this.m_close_btn.classList.add("ctrlright");
-        this.m_close_btn.innerText = "Close";
+        this.m_close_btn = doc.createElement("a");
+        // this.m_close_btn = doc.createElement("button");
+        this.m_close_btn.classList.add("rightside-ctrl", "a-button");
+        // this.m_close_btn.innerText = "Close";
+        this.m_close_btn.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" />`;
         this.m_close_btn.addEventListener("pointerup", this.onClickClose);
-
-        this.m_fit_btn = doc.createElement("button");
-        this.m_fit_btn.classList.add("ctrlright");
-        this.m_fit_btn.innerText = "Fit";
-        this.m_fit_btn.addEventListener("pointerup", this.onClickFit);
 
         this.m_control_frame.appendChild(this.m_play_btn);
         this.m_control_frame.appendChild(this.m_time_display);
         this.m_control_frame.appendChild(this.m_video_slider);
         this.m_control_frame.appendChild(this.m_close_btn);
-        this.m_control_frame.appendChild(this.m_fit_btn);
     }
 
     get element(): HTMLDivElement {
@@ -206,6 +234,7 @@ export class Control {
     public setVideo(video: HTMLVideoElement): void {
         this.m_video = video;
         this.m_video_handler = new VideoHandler(this.m_video, this.onModifyVideo);
+        this.updateElements();
     }
 
     public releaseVideo(): void {
@@ -213,24 +242,50 @@ export class Control {
         this.m_video = null;
     }
 
+    public updateElements(): void {
+        if (!this.m_video || !this.m_video_handler) return;
+
+        this.m_play_btn_handler.setState(this.m_video.paused);
+        this.onDurationChange();
+        this.onTimeUpdate();
+    }
+
     private onModifyVideo = (event: Event) => {
         if (!this.m_video || !this.m_video_handler) return;
 
         switch (event.type) {
             case "durationchange":
-                this.m_time_display_handler.updateDuration(this.m_video_handler.getDuration());
+                this.onDurationChange();
                 break;
             case "timeupdate":
-                this.m_time_display_handler.updateTime(this.m_video_handler.getTime());
-                this.m_video_slider_handler.setPostion(this.m_video_slider_handler.getPosition());
+                this.onTimeUpdate();
                 break;
             case "play":
-                this.m_play_btn_handler.setState(false);
+                this.onPlay();
                 break;
             case "pause":
-                this.m_play_btn_handler.setState(true);
+                this.onPause();
                 break;
         }
+    };
+
+    private onDurationChange = () => {
+        if (!this.m_video || !this.m_video_handler) return;
+        this.m_time_display_handler.updateDuration(this.m_video_handler.getDuration());
+    };
+
+    private onTimeUpdate = () => {
+        if (!this.m_video || !this.m_video_handler) return;
+        this.m_time_display_handler.updateTime(this.m_video_handler.getTime());
+        this.m_video_slider_handler.setPostion(this.m_video_handler.getPosition());
+    };
+
+    private onPlay = () => {
+        this.m_play_btn_handler.setState(false);
+    };
+
+    private onPause = () => {
+        this.m_play_btn_handler.setState(true);
     };
 
     private onClickPlayPause = async () => {
@@ -248,10 +303,6 @@ export class Control {
     private onClickClose = () => {
         this.m_parentWnd.close();
         window.focus();
-    };
-
-    private onClickFit = () => {
-        const doc = this.m_parentWnd.document;
     };
 
     private onSeek = () => {

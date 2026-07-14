@@ -1,0 +1,84 @@
+@charset "UTF-8";
+
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+    }
+    video, canvas, input {
+        width: 100%;
+    }
+    video {
+        z-index: 1;
+    }
+    canvas {
+        z-index: 2;
+    }
+    
+    #playerframe {
+        background-color: black;
+        width: 100%;
+        height: stretch;
+        flex: 1;
+        min-height: 0;
+    }
+    #player {
+        /* background-color: blue; */
+        position: relative;
+    }
+    #ctrler {
+        width: 100%;
+        flex: none;
+    }
+    #ctrler, #ctrler *:not(a.a-button:hover, a.a-button > img) {
+        background-color: #202020;
+        color: white;
+    }
+    #time-display {
+        white-space: pre;
+        font-family: monospace;
+    }
+
+    .rightside-ctrl {
+        justify-content: end;
+    }
+
+    .row-flex {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+    .column-flex {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .space-between-flex {
+        justify-content: space-between;
+    }
+
+a.a-button {
+    display: flex;
+    border-radius: 50%;
+    font-weight: bold;
+    transition: 0.3s;
+    padding: 5px;
+
+    &.playing img#play-btn {
+        display: none;
+    }
+    &.pausing img#pause-btn {
+        display: none;
+    }
+    &:hover {
+        background-color: #808080;
+    }
+
+}
+/* 
+.a-button:hover {
+  opacity: .7;
+  background-color: #808080;
+} */

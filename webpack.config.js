@@ -1,13 +1,14 @@
-const path = require("node:path");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-module.exports = {
+export default {
     entry: "./src/content/main.ts",
     output: {
         filename: "content.js",
-        path: path.resolve(__dirname, "dist")
+        path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "dist")
     },
     module: {
-        rule: [{
+        rules: [{
             test: /\.ts$/,
             use: "ts-loader",
             exclude: /node_modules/
@@ -15,5 +16,7 @@ module.exports = {
     },
     resolve: {
         extensions: [".ts", ".js"]
-    }
+    },
+    mode: "production",
+    devtool: "source-map"
 };

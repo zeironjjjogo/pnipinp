@@ -1,97 +1,53 @@
 import { Control } from "./controler";
-import { DOMController } from "./domctrler";
-import { MutationHandler } from "./observer";
+import { DOMContents } from "./domctrler";
+import { extractApps } from "./miner";
+import { MutationHandler, URLObserver } from "./observer";
 import { Resizer } from "./resizer";
-import { DocumentPictureInPicture } from "./util";
+import { doesSupportDocumentPiP, isValidSize } from "./util";
 import { WrappedCanvas, WrappedVideo } from "./wrapped";
-
-type Wnd_T = typeof window;
 
 (async () => {
     try {
-        if (!("documentPictureInPicture" in window)) {
+        if (!doesSupportDocumentPiP(window)) {
+            console.error("Your browser does not support documentPictureInPicture.");
             return;
         }
 
-        const wnd = window as Wnd_T & { readonly "documentPictureInPicture": DocumentPictureInPicture };
-        const dpip = wnd.documentPictureInPicture;
-        const pipWin = dpip.window || await dpip.requestWindow();
+        const pipWin = window.documentPictureInPicture.window || await window.documentPictureInPicture.requestWindow();
         const pipDoc = pipWin.document;
 
         if (pipDoc.body.hasChildNodes()) {
+            console.log("Already initialized.");
             return;
         }
 
-        pipDoc.head.innerHTML = `<style>
-        html, body {
-            margin: 0;
-            width: 100%;
-        },
-        html {
-            height: 100%;
-        },
-        body {
-            height: fit-content;
-            display: flex;
-            flex-direction: column;
-        }
-        video {
-            z-index: 1;
-            position: absolute;
-        }
-        canvas {
-            z-index: 2;
-            position: absolute;
-        }
-        input {
-            width: 100%;
-        }
-        #playerframe {
-            background: black;
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-        #player {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        #ctrler {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: spece-between;
-        }
-        #timedisplay {
-            white-space: pre;
-            font-family: monospace;
-        }
-        .ctrlleft {
-        }
-        .ctrlright {
-            justify-content: end;
-        }
-        </style>`;
+        const link = pipDoc.createElement("link");
+        link.rel = "stylesheet";
+        link.href = chrome.runtime.getURL("./src/css/main.css");
+        pipDoc.head.appendChild(link);
+
+        pipDoc.body.classList.add("column-flex", "space-between-flex");
 
         const playerFrame = pipDoc.createElement("div");
         playerFrame.id = "playerframe";
+        playerFrame.classList.add("row-flex");
+
         const player = pipDoc.createElement("div");
         player.id = "player";
+        player.classList.add("column-flex");
+
         const ctrler = new Control(pipWin);
 
         playerFrame.appendChild(player);
-        pipDoc.appendChild(playerFrame);
-        pipDoc.appendChild(ctrler.element);
+        pipDoc.body.appendChild(playerFrame);
+        pipDoc.body.appendChild(ctrler.element);
 
         const wVideo = new WrappedVideo(player);
         const wCanvas = new WrappedCanvas(player);
-        const domCtrl = new DOMController(wVideo, wCanvas);
-        const resizer = new Resizer(playerFrame);
+        const domCtrl = new DOMContents(wVideo, wCanvas);
+        const resizer = new Resizer(playerFrame, player, wVideo, wCanvas);
         
-        const mh = new MutationHandler(wVideo, wCanvas, ctrler, resizer, domCtrl);
+        const mh = new MutationHandler(ctrler, resizer, domCtrl);
         const observer = new MutationObserver((records) => {
             for (const record of records) {
                 switch (record.type) {
@@ -100,7 +56,7 @@ type Wnd_T = typeof window;
                         break;
                     }
                     case "characterData": {
-                        mh.onModifyCharacterData(record);
+                        // mh.onModifyCharacterData(record);
                         break;
                     }
                     case "childList": {
@@ -117,23 +73,39 @@ type Wnd_T = typeof window;
             subtree: true
         });
 
+        const reszobs = new ResizeObserver(() => {
+            if (isValidSize(playerFrame)) {
+                resizer.resize();
+                reszobs.disconnect();
+            }
+        });
+        reszobs.observe(playerFrame);
+
         pipWin.addEventListener("resize", () => {
-            if (wVideo.element)
-                resizer.resize(wVideo.element, wCanvas.element);
+            resizer.resize();
         });
 
         pipWin.addEventListener("pagehide", () => {
             observer.disconnect();
+            reszobs.disconnect();
+            urlObs.stop();
             domCtrl.pushContents(ctrler);
             window.focus();
         });
 
+        const urlObs = new URLObserver((url) => {
+            console.log("URL modified: " + url);
+            domCtrl.pushContents(ctrler);
+            
+            // domCtrl.pullContents(ctrler);
+            // resizer.resize();
+        });
+        urlObs.start();
+
         if (!domCtrl.pullContents(ctrler)) {
+            console.log("Couldn't find a video element.");
             return;
         }
-
-        if (wVideo.element)
-            resizer.resize(wVideo.element, wCanvas.element);
 
     } catch (e) {
         console.error(e);
