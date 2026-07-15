@@ -1,62 +1,84 @@
-import { type Control } from "./controler";
-import { type DOMContents } from "./domctrler";
-import { type Resizer } from "./resizer";
-import { formatURL, isCommentCanvas, isStageDiv, sleep } from "./util";
+// import { type Control } from "./controler";
+// import { DOMCtrler, type DOMContents } from "./domctrler";
+// import { FeatureContext, getParent_nico } from "./features";
+// import { type Resizer } from "./resizer";
+import { formatURL, sleep } from "./util";
 
-export class MutationHandler {
-    private readonly m_ctrl: Control;
-    private readonly m_rszr: Resizer;
-    private readonly m_domctrl: DOMContents;
-    private m_modified_properties: string[] = [];
+// export class MutationHandler {
+//     private readonly m_domctrl: DOMCtrler;
+//     private m_modified_properties: string[] = [];
+//     private readonly m_ft: FeatureContext;
 
-    constructor(ctrl: Control, rszr: Resizer, domctrl: DOMContents) {
-        this.m_ctrl = ctrl;
-        this.m_rszr = rszr;
-        this.m_domctrl = domctrl;
-    }
+//     constructor(domctrl: DOMCtrler, ft: FeatureContext) {
+//         this.m_domctrl = domctrl;
+//         this.m_ft = ft;
+//     }
     
-    public onModifyAttributes(r: MutationRecord) {
-        // if (!isCommentCanvas(r.target)) return;
-        if (this.m_domctrl.canvas.element !== r.target) return;
-        console.log("modified canvas attributes");
-        this.m_modified_properties.push(r.attributeName || "");
+//     // on modified attributes of the comment canvas on nicovideo. 
+//     public onModifyAttributes(r: MutationRecord) {
+//         if (!(r.target instanceof HTMLElement)) return;
+//         const ft = this.m_ft.getFeature();
+//         if (!ft.canvasRequired) return;
 
-        if (
-            !this.m_modified_properties.includes("width") ||
-            !this.m_modified_properties.includes("height")
-        ) return;
+//         switch (ft.type) {
+//             case "nicovideo:shorts": {
+//                 if (
+//                     r.target === ft.parent() &&
+//                     r.attributeName === "data-state" &&
+//                     r.target.dataset.state === "active"
+//                 ) {
+//                     if (!this.m_domctrl.reloadElement()) {
+//                         throw Error("Faild to pull a video on parent set to be active.");
+//                     }
+//                     return;
+//                 }
+//             }
+//             case "nicovideo":
+//             case "nicovideo:live": {
+//                 if (this.m_domctrl.canvas.element !== r.target) {
+//                     return;
+//                 }
+//                 if (r.attributeName) this.m_modified_properties.push(r.attributeName);
+//                 if (
+//                     !this.m_modified_properties.includes("width") ||
+//                     !this.m_modified_properties.includes("height")
+//                 ) {
+//                     return;
+//                 }
+//                 this.m_modified_properties = [];
 
-        console.log('finished comment prepairing');
+//                 this.m_domctrl.reloadCanvas();
+//                 return;
+//             }
+//         }
+//     }
 
-        this.m_modified_properties = [];
+//     // nothing use this, so it is deprecated function. use URL observer.
+//     public onModifyCharacterData(r: MutationRecord) {
+//         if (r.target.parentNode instanceof HTMLTitleElement) {
+//             console.log("~~~~~~\n~~~~~title modified;~~~~~\n~~~~~");
+//             // this.m_domctrl.pushContents(this.m_ctrl);
+//             // this.m_domctrl.pullContents(this.m_ctrl);
+//         }
+//     }
 
-        this.m_domctrl.pullCanvas();
 
-        this.m_rszr.resize();
-    }
+//     // for detecting stage added on nicovideo.
+//     public onModifyChildList(r: MutationRecord) {
+//         const ft = this.m_ft.getFeature();
+//         if (!ft.parentRequired) return;
+//         for (const node of r.addedNodes) {
+//             if (!(node instanceof HTMLDivElement) || node !== ft.parent()) continue;
+//             console.log("modified child list");
+//             if (!this.m_domctrl.reloadElement()) {
+//                 throw Error("Failed to pull a video element.");
+//             }
+//         }
+//     }
+// };
 
-    public onModifyCharacterData(r: MutationRecord) {
-        if (r.target.parentNode instanceof HTMLTitleElement) {
-            console.log("~~~~~~\n~~~~~title modified;~~~~~\n~~~~~");
-            // this.m_domctrl.pushContents(this.m_ctrl);
-            this.m_domctrl.pullContents(this.m_ctrl);
-        }
-    }
 
-    public onModifyChildList(r: MutationRecord) {
-        for (const node of r.addedNodes) {
-            const res = isStageDiv(node);
-            if (!res) continue;
-            console.log("modified child list");
-            if (!this.m_domctrl.pullContents(this.m_ctrl)) {
-                throw Error("Failed to pull a video element.");
-            }
-
-            this.m_rszr.resize();
-        }
-    }
-};
-
+// observing URL modified. for push back elements on nicovideo.
 export class URLObserver {
     private m_kept_url: string;
 

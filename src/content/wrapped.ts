@@ -1,5 +1,4 @@
-import { extractApps, mineElement } from "./miner"
-import { isValidSize } from "./util"
+import type { AppFTs } from "./features"
 
 interface AttrWrappedElement {
     width: string
@@ -29,8 +28,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
     protected abstract restoreAttrs(): void;
     protected abstract beforePull(): boolean;
     protected abstract beforePush(): void;
-    protected abstract fillter(e: NodeListOf<E>): E | null;
-    public abstract loadElement(): E | null;
+    public abstract loadElement(ft: AppFTs): E | null;
 
     get element(): E | null {
         return this.m_elem;
@@ -61,6 +59,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
         parent.insertBefore(this.m_placeholder, this.m_elem);
         this.m_dstParent.appendChild(this.m_elem);
 
+        console.log("pull();");
         this.m_isMoved = true;
     }
 
@@ -76,6 +75,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
             parent.removeChild(this.m_placeholder);
         }
 
+        console.log("push();");
         this.m_isMoved = false;
         this.m_elem = null;
     }
@@ -93,22 +93,17 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
         return "video-placeholder";
     }
 
-    protected fillter(e: NodeListOf<HTMLVideoElement>): HTMLVideoElement | null {
-        let targetElem = e.item(0);
-        e.forEach(v => {
-            if (v.parentElement?.dataset.name === "video-content") targetElem = v;
-        });
-        return targetElem;
-    }
-
-    public loadElement(): HTMLVideoElement | null {
+    public loadElement(ft: AppFTs): HTMLVideoElement | null {
         if (this.m_elem && this.m_isMoved) {
             this.push();
         }
 
-        const currentUrl = extractApps();
-        console.log("service: ", currentUrl);
-        return this.m_elem = mineElement[currentUrl].video();
+        return this.m_elem = ft.video();
+        // const currentUrl = extractApps();
+        // console.log("service: ", currentUrl);
+        // this.m_elem = mineElement[currentUrl].video();
+        // return this.m_elem;
+        // return this.m_elem = mineElement[currentUrl].video();
 
         // const elems = document.querySelectorAll("video");
         // if (elems.length === 0) {
@@ -177,22 +172,18 @@ export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrapped
         return "comment-placeholder";
     }
 
-    protected fillter(e: NodeListOf<HTMLCanvasElement>): HTMLCanvasElement | null {
-        let targetElem = null;
-        e.forEach(c => {
-            if (c.parentElement?.dataset.name === "comment") targetElem = c;
-        });
-        return targetElem;
-    }
-
-    public loadElement(): HTMLCanvasElement | null {
+    public loadElement(ft: AppFTs): HTMLCanvasElement | null {
         if (this.m_elem && this.m_isMoved) {
             this.push();
         }
 
-        const currentUrl = extractApps();
-        console.log("service: ", currentUrl);
-        return this.m_elem = mineElement[currentUrl].canvas();
+        if (!ft.canvasRequired) return this.m_elem = null;
+        return this.m_elem = ft.canvas();
+
+
+        // const currentUrl = extractApps();
+        // console.log("service: ", currentUrl);
+        // return this.m_elem = mineElement[currentUrl].canvas();
         // const elems = document.querySelectorAll("canvas");
         // if (elems.length === 0) {
         //     return null;

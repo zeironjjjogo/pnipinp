@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 # Added files
 *.d.ts
 *.d.ts.map
+.vscode/
+output/

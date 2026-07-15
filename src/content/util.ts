@@ -1,5 +1,3 @@
-import { extractApps, getParent_nico, mineElement } from "./miner";
-
 export interface DocumentPictureInPicture extends EventTarget {
     readonly window: Window | null
     requestWindow(options?: {
@@ -25,18 +23,18 @@ export function isCommentCanvas(node: Node): node is HTMLCanvasElement {
     );
 }
 
-export function isStageDiv(node: Node): node is HTMLDivElement {
-    // return (
-    //     node instanceof HTMLDivElement &&
-    //     node.dataset.name === "stage"
-    // );
-    return (
-        node instanceof HTMLDivElement && (
-            getParent_nico() === node ||
-            node.querySelectorAll("div[data-state]").length !== 0
-        )
-    );
-}
+// export function isStageDiv(node: Node): node is HTMLDivElement {
+//     // return (
+//     //     node instanceof HTMLDivElement &&
+//     //     node.dataset.name === "stage"
+//     // );
+//     return (
+//         node instanceof HTMLDivElement && (
+//             getParent_nico() === node ||
+//             node.querySelectorAll("div[data-state]").length !== 0
+//         )
+//     );
+// }
 
 export function formatURL(url: string): string {
     if (url.includes("?")) {
@@ -71,3 +69,27 @@ export function isValidSize(element: HTMLElement): boolean {
     const rect = element.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
 }
+
+export interface IContext<T> {
+    getValue(): T;
+    updateValue(): T;
+};
+
+export interface Collection<T> {
+    append(v: T): unknown;
+    clear(): unknown;
+    includes(v: T): boolean;
+};
+
+export class AttrsCollection implements Collection<string> {
+    private m_arr: string[] = [];
+    public append(v: string) : void {
+        this.m_arr.push(v);
+    }
+    public clear(): void {
+        this.m_arr = [];
+    }
+    public includes(v: string): boolean {
+        return this.m_arr.includes(v);
+    }
+};

@@ -1,15 +1,5 @@
-type False_T = 0;
-type True_T = 1;
-type Bool_T = False_T | True_T;
-
-const False: Bool_T = 0;
-const True: Bool_T = 1;
-
-function b2bt(b: boolean): Bool_T { return b ? True : False; }
-
 class PlayButton {
     private readonly m_elem: HTMLAnchorElement;
-    private readonly PAUSED_TEXT: { [k in Bool_T]: string } = { 0: "Ⅱ", 1: "▶" };
 
     get button() { return this.m_elem; }
 
@@ -21,7 +11,6 @@ class PlayButton {
     }
     
     public setState(paused: boolean): void {
-        // this.m_elem.innerText = this.PAUSED_TEXT[b2bt(paused)];
         if (paused) {
             this.m_elem.classList.remove("playing");
             this.m_elem.classList.add("pausing");
@@ -172,15 +161,15 @@ class VideoHandler {
 };
 
 export class Control {
-    private readonly m_parentWnd: Window;
+    private m_video: HTMLVideoElement | null = null;
+    private m_video_handler: VideoHandler | null = null;
 
-    private m_video: HTMLVideoElement | null;
-    private m_video_handler: VideoHandler | null;
+    private onClickClose: () => void;
 
     private readonly m_control_frame: HTMLDivElement;
     
     // private readonly m_play_btn: HTMLButtonElement;
-    private readonly m_play_btn: HTMLAnchorElement;
+    // private readonly m_play_btn: HTMLAnchorElement;
     private readonly m_time_display: HTMLSpanElement;
     private readonly m_video_slider: HTMLInputElement;
     // private readonly m_close_btn: HTMLButtonElement;
@@ -190,12 +179,13 @@ export class Control {
     private readonly m_time_display_handler: TimeDisplay;
     private readonly m_video_slider_handler: VideoSlider;
 
-    constructor(wnd: Window, video: HTMLVideoElement | null = null) {
-        this.m_parentWnd = wnd;
-        this.m_video = video;
-        this.m_video_handler = video ? new VideoHandler(video, this.onModifyVideo) : null;
-
+    constructor(wnd: Window) {
         const doc = wnd.document;
+
+        this.onClickClose = () => {
+            wnd.close();
+            window.focus();
+        };
 
         this.m_control_frame = doc.createElement("div");
         this.m_control_frame.id = "ctrler";
@@ -204,8 +194,7 @@ export class Control {
         // this.m_play_btn = doc.createElement("button");
         // this.m_play_btn_handler = new PlayButton(this.m_play_btn);
         this.m_play_btn_handler = new PlayButton(doc);
-        this.m_play_btn = this.m_play_btn_handler.button;
-        this.m_play_btn.addEventListener("pointerup", this.onClickPlayPause);
+        this.m_play_btn_handler.button.addEventListener("pointerup", this.onClickPlayPause);
 
         this.m_time_display = doc.createElement("span");
         this.m_time_display_handler = new TimeDisplay(this.m_time_display);
@@ -221,7 +210,7 @@ export class Control {
         this.m_close_btn.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" />`;
         this.m_close_btn.addEventListener("pointerup", this.onClickClose);
 
-        this.m_control_frame.appendChild(this.m_play_btn);
+        this.m_control_frame.appendChild(this.m_play_btn_handler.button);
         this.m_control_frame.appendChild(this.m_time_display);
         this.m_control_frame.appendChild(this.m_video_slider);
         this.m_control_frame.appendChild(this.m_close_btn);
@@ -300,10 +289,10 @@ export class Control {
         this.m_play_btn_handler.setState(this.m_video.paused);
     };
 
-    private onClickClose = () => {
-        this.m_parentWnd.close();
-        window.focus();
-    };
+    // private onClickClose = () => {
+    //     this.m_parentWnd.close();
+    //     window.focus();
+    // };
 
     private onSeek = () => {
         if (!this.m_video || !this.m_video_handler) return;

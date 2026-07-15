@@ -1,4 +1,3 @@
-import { dumpSizes } from "./util";
 import type { WrappedCanvas, WrappedVideo } from "./wrapped";
 
 type Size = { width: number, height: number };
@@ -64,6 +63,7 @@ export class Resizer {
             
         } else {
             const videoSize = Resizer.makeInscribed(regionSize, videoAspect);
+            console.log(regionSize, videoSize);
             v.style.width = videoSize.width + "px";
             v.style.height = videoSize.height + "px";
             this.m_player.style.width = videoSize.width + "px";
