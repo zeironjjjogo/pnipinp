@@ -13,6 +13,10 @@
         {
             "resources": ["src/css/main.css"],
             "matches": ["<all_urls>"]
+        },
+        {
+            "resources": ["dist/*.map"],
+            "matches": ["<all_urls>"]
         }
     ]
 }

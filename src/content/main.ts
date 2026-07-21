@@ -1,10 +1,9 @@
-import { Control } from "./controler";
-import { DOMContents, DOMCtrler } from "./domctrler";
-import { FeatureContext } from "./features";
-import { URLObserver } from "./observer";
-import { Resizer } from "./resizer";
-import { AttrsCollection, doesSupportDocumentPiP, formatURL, isValidSize } from "./util";
-import { WrappedCanvas, WrappedVideo } from "./wrapped";
+import styles from "@/css/main.css";
+
+import { DOMCtrler } from "@/content/domctrler";
+import { FeatureContext } from "@/content/features";
+import { URLObserver } from "@/content/observer";
+import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from "@/content/util";
 
 (async () => {
     try {
@@ -21,96 +20,60 @@ import { WrappedCanvas, WrappedVideo } from "./wrapped";
             return;
         }
 
-        // const base = pipDoc.createElement("base");
-        // base.href = formatURL(document.URL);
-        // pipDoc.head.appendChild(base);
-
-        const link = pipDoc.createElement("link");
-        link.rel = "stylesheet";
-        link.href = chrome.runtime.getURL("./src/css/main.css");
-        pipDoc.head.appendChild(link);
+        styles.use();
+        if (!pipDoc.head.hasChildNodes()) {
+            console.log("style does not exist.");
+            const style = document.querySelector("style[pnipinp=pnipinp-stylesheet]");
+            if (!style) {
+                console.log("Failed to fetch stylesheet.");
+                return;
+            }
+            pipDoc.head.appendChild(style);
+        }
 
         pipDoc.body.classList.add("column-flex", "space-between-flex");
 
-        // const playerFrame = pipDoc.createElement("div");
-        // playerFrame.id = "playerframe";
-        // playerFrame.classList.add("row-flex");
-
-        // const player = pipDoc.createElement("div");
-        // player.id = "player";
-        // player.classList.add("column-flex");
-
-        // const ctrler = new Control(pipWin);
-
-        // playerFrame.appendChild(player);
-        // pipDoc.body.appendChild(playerFrame);
-        // pipDoc.body.appendChild(ctrler.element);
-
-        // const wVideo = new WrappedVideo(player);
-        // const wCanvas = new WrappedCanvas(player);
-        // const domCtrl = new DOMContents(wVideo, wCanvas);
-        // const domCtrl = new DOMContents(player);
-        // const wVideo = domCtrl.video;
-        // const wCanvas = domCtrl.canvas;
-        // const resizer = new Resizer(playerFrame, player, wVideo, wCanvas);
-
         const ftCtx = new FeatureContext();
+        console.log(ftCtx.updateValue().type);
         const domCtrl = new DOMCtrler(pipWin, ftCtx);
 
-        // const mh = new MutationHandler(domCtrl, ftCtx);
-        const attrsCollection = new AttrsCollection();
+        const argsCtx = {
+            collection: new AttrsCollection(),
+            loadCanvas: domCtrl.reloadCanvas.bind(domCtrl),
+            loadElements: domCtrl.reloadElement.bind(domCtrl),
+            releaseElements: domCtrl.releaseElement.bind(domCtrl),
+            resize: domCtrl.resize.bind(domCtrl),
+            getCanvas: () => domCtrl.contents.canvas.element,
+            getVideo: () => domCtrl.contents.video.element
+        } satisfies HandlerArgsContext;
+
         const observer = new MutationObserver((records) => {
             const ft = ftCtx.getValue();
             for (const record of records) {
                 switch (record.type) {
                     case "attributes": {
-                        // mh.onModifyAttributes(record);
-                        if ("onAttributeModified" in ft) {
-                            ft.onAttributeModified(record, attrsCollection, domCtrl.reloadCanvas.bind(domCtrl), domCtrl.reloadElement.bind(domCtrl));
+                        if ("onAttributeModified" in ft.behaviours) {
+                            ft.behaviours.onAttributeModified(record, argsCtx);
                         }
                         break;
                     }
-                    case "characterData": {
-                        // mh.onModifyCharacterData(record);
-                        break;
-                    }
                     case "childList": {
-                        // mh.onModifyChildList(record);
-                        if ("onChildListModified" in ft) {
-                            if (ft.type === "nicovideo:shorts") debugger;
-                            ft.onChildListModified(record, domCtrl.reloadElement.bind(domCtrl));
+                        if ("onChildListModified" in ft.behaviours) {
+                            ft.behaviours.onChildListModified(record, argsCtx);
                         }
                         break;
                     }
                 }
             }
         });
-        observer.observe(document, {
-            attributes: true,
-            characterData: true,
-            childList: true,
-            subtree: true
-        });
+        observer.observe(document, { attributes: true, childList: true, subtree: true });
 
-        // const reszobs = new ResizeObserver(() => {
-        //     if (isValidSize(playerFrame)) {
-        //         resizer.resize();
-        //         reszobs.disconnect();
-        //     }
-        // });
-        // reszobs.observe(playerFrame);
-
-        pipWin.addEventListener("resize", () => {
-            // resizer.resize();
-            domCtrl.resize();
-        });
+        pipWin.addEventListener("resize", domCtrl.resize.bind(domCtrl));
 
         pipWin.addEventListener("pagehide", () => {
             observer.disconnect();
-            // reszobs.disconnect();
             urlObs.stop();
             domCtrl.dispose();
-            // domCtrl.pushContents(ctrler);
             window.focus();
         });
 
@@ -118,30 +81,18 @@ import { WrappedCanvas, WrappedVideo } from "./wrapped";
             console.log("URL modified: " + url);
 
             const ft = ftCtx.updateValue();
-            if ("onURLModified" in ft) {
-                ft.onURLModified(domCtrl.releaseElement.bind(domCtrl));
+            if ("onURLModified" in ft.behaviours && ft.type === ft.behaviours.type) {
+                ft.behaviours.onURLModified(argsCtx);
             }
             console.log("service: ", ft.type);
-
-            // const ft = ftCtx.updateFeature();
-            // console.log("service: ", ft.type);
-            // // if (!url.includes("/shorts/"))
-            // // domCtrl.pushContents(ctrler);
-            // if (ft.type === "nicovideo")
-            // domCtrl.releaseElement();
-            
-            
-            // domCtrl.pullContents(ctrler);
-            // resizer.resize();
         });
         urlObs.start();
 
-        // if (!domCtrl.pullContents(ctrler)) {
         if (!domCtrl.reloadElement()) {
             console.log("Couldn't find a video element.");
             return;
         }
-
+        
     } catch (e) {
         console.error(e);
     }

@@ -1,4 +1,4 @@
-import type { WrappedCanvas, WrappedVideo } from "./wrapped";
+import type { WrappedCanvas, WrappedVideo } from "@/content/wrapped";
 
 type Size = { width: number, height: number };
 const Size = {
@@ -35,12 +35,6 @@ export class Resizer {
             const canvasAspect = c.width / c.height;
             const canvasSize = Resizer.makeInscribed(regionSize, canvasAspect);
             const videoSize = Resizer.makeInscribed(canvasSize, videoAspect);
-
-            const playerSize = Size.make(
-                Math.max(canvasSize.width, videoSize.width),
-                Math.max(canvasSize.height, videoSize.height)
-            );
-
             v.style.width = videoSize.width + "px";
             v.style.height = videoSize.height + "px";
             c.style.width = canvasSize.width + "px";
@@ -48,22 +42,8 @@ export class Resizer {
 
             this.m_player.style.width = canvasSize.width + "px";
             this.m_player.style.height = canvasSize.height + "px";
-            // if (canvasSize.width - videoSize.width !== 0 || canvasSize.height - videoSize.height !== 0) {
-            //     // v.style.left = ((canvasSize.width - videoSize.width) / 2) + "px";
-            //     // v.style.top = ((canvasSize.height - videoSize.height) / 2) + "px";
-            //     if (playerSize.width !== videoSize.width) {
-            //         v.style.left = ((playerSize.width - videoSize.width) / 2) + "px";
-            //         console.log(((playerSize.width - videoSize.width) / 2) + "px");
-            //     }
-            //     if (playerSize.height !== videoSize.height) {
-            //         v.style.top = ((playerSize.height - videoSize.height) / 2) + "px";
-            //         console.log(((playerSize.height - videoSize.height) / 2) + "px");
-            //     }
-            // }
-            
         } else {
             const videoSize = Resizer.makeInscribed(regionSize, videoAspect);
-            console.log(regionSize, videoSize);
             v.style.width = videoSize.width + "px";
             v.style.height = videoSize.height + "px";
             this.m_player.style.width = videoSize.width + "px";

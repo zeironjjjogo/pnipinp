@@ -1,7 +1,7 @@
-import { Control } from "./controler";
-import type { AppFTs, FeatureContext } from "./features";
-import { Resizer } from "./resizer";
-import { WrappedCanvas, WrappedVideo } from "./wrapped";
+import { Control } from "@/content/controler";
+import type { FeatureContext } from "@/content/features";
+import { Resizer } from "@/content/resizer";
+import { WrappedCanvas, WrappedVideo } from "@/content/wrapped";
 
 export class DOMContents {
     private readonly m_wVideo: WrappedVideo;
@@ -17,43 +17,42 @@ export class DOMContents {
         this.m_ftCtx = ftCtx;
     }
 
-    // constructor(v: WrappedVideo, c: WrappedCanvas) {
-    //     this.m_wVideo = v;
-    //     this.m_wCanvas = c;
-    // }
-
-    private onMetaDataLoaded: (() => unknown) | null = null;
-
-    public pullVideo(ctrl: Control, resize: () => unknown): boolean {
+    public pullVideo(ctrl: Control, onMetaDataLoaded: (() => unknown) | null): boolean {
         const ft = this.m_ftCtx.getValue();
-        if (!this.m_wVideo.loadElement(ft) || !this.m_wVideo.element) return false;
+        if (
+            !this.m_wVideo.loadElement(ft.selectors.video) || 
+            !this.m_wVideo.element
+        ) return false;
+
         this.m_wVideo.pull();
         ctrl.setVideo(this.m_wVideo.element);
 
-        if ("onMetaDataLoaded" in ft) {
-            this.onMetaDataLoaded = () => { ft.onMetaDataLoaded(resize); };
-            this.m_wVideo.element.addEventListener("loadedmetadata", this.onMetaDataLoaded);
-        }
-
+        if (onMetaDataLoaded)
+            this.m_wVideo.bindDataChanged(onMetaDataLoaded);
         return true;
     }
 
     public pullCanvas(): void {
-        this.m_wCanvas.loadElement(this.m_ftCtx.getValue());
+        const ft = this.m_ftCtx.getValue();
+
+        if ("canvas" in ft.selectors) {
+            this.m_wCanvas.loadElement(ft.selectors.canvas);
+        } else {
+            this.m_wCanvas.loadElement(null);
+        }
+
         this.m_wCanvas.pull();
     }
 
-    public pullContents(ctrl: Control, resize: () => unknown): boolean {
-        if (!this.pullVideo(ctrl, resize)) return false;
+    public pullContents(ctrl: Control, onMetaDataLoaded: (() => unknown) | null): boolean {
+        if (!this.pullVideo(ctrl, onMetaDataLoaded)) return false;
         this.pullCanvas();
         return true;
     }
 
-    public pushVideo(ctrl: Control): void {
-        if ("onMetaDataLoaded" in this.m_ftCtx.getValue() && this.onMetaDataLoaded) {
-            this.m_wVideo.element?.removeEventListener("loadedmetadata", this.onMetaDataLoaded);
-            this.onMetaDataLoaded = null;
-        }
+    public pushVideo(ctrl: Control, onMetaDataLoaded: (() => unknown) | null): void {
+        if (onMetaDataLoaded)
+            this.m_wVideo.element?.removeEventListener("loadedmetadata", onMetaDataLoaded);
         ctrl.releaseVideo();
         this.m_wVideo.push();
     }
@@ -62,11 +61,10 @@ export class DOMContents {
         this.m_wCanvas.push();
     }
 
-    public pushContents(ctrl: Control): void {
-        this.pushVideo(ctrl);
+    public pushContents(ctrl: Control, onMetaDataLoaded: (() => unknown) | null): void {
+        this.pushVideo(ctrl, onMetaDataLoaded);
         this.pushCanvas();
     }
-    
 };
 
 export class DOMCtrler {
@@ -78,6 +76,11 @@ export class DOMCtrler {
     private readonly m_resizer: Resizer;
 
     private readonly m_reszObs: ResizeObserver;
+
+    private readonly m_ftCtx: FeatureContext;
+    private m_callback: (() => unknown) | null = null;
+
+    public readonly playerFrame: HTMLDivElement;
 
     get contents() { return this.m_contents; }
     get controller() { return this.m_controller; }
@@ -124,30 +127,35 @@ export class DOMCtrler {
         this.m_contents = contents;
         this.m_controller = controller;
         this.m_resizer = resizer;
-        console.log("contents: ", contents, "\nm_contents: ", this.m_contents);
+        this.m_ftCtx = ft;
+        this.playerFrame = playerFrame;
     }
 
     public resize(): void {
         this.m_resizer.resize();
     }
 
-    public reloadElement(self: DOMCtrler = this): boolean {
-        console.log("m_contents: ", self.m_contents);
-        const result = self.m_contents.pullContents(self.m_controller,  self.m_resizer.resize);
-        if (result && self.m_contents.video.element) {
-            self.m_resizer.resize();
+    public reloadElement(): boolean {
+        const ft = this.m_ftCtx.getValue();
+        if ("onMetaDataLoaded" in ft.behaviours) {
+            this.m_callback = ft.behaviours.onMetaDataLoaded.bind(ft, this.resize.bind(this));
+        }
+        const result = this.m_contents.pullContents(this.m_controller, this.m_callback);
+        if (result && this.m_contents.video.element) {
+            console.log("resize");
+            this.m_resizer.resize();
         }
         return result;
     }
 
-    public reloadCanvas(self: DOMCtrler = this): void {
-        self.m_contents.pullCanvas();
-        self.m_resizer.resize();
+    public reloadCanvas(): void {
+        this.m_contents.pullCanvas();
+        this.m_resizer.resize();
     }
 
-    public releaseElement(self: DOMCtrler = this) {
-        console.log("m_contents: ", self.m_contents);
-        this.m_contents.pushContents(self.m_controller);
+    public releaseElement() {
+        this.m_contents.pushContents(this.m_controller, this.m_callback);
+        this.m_callback = null;
     }
 
     public dispose() {

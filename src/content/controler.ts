@@ -22,21 +22,6 @@ class PlayButton {
     }
 };
 
-// class PlayButton {
-//     private readonly m_elem: HTMLButtonElement;
-//     private readonly PAUSED_TEXT: { [k in Bool_T]: string } = { 0: "Ⅱ", 1: "▶" };
-
-//     constructor(button: HTMLButtonElement) {
-//         this.m_elem = button;
-//         this.m_elem.classList.add("ctrlleft");
-//         this.setState(true);
-//     }
-
-//     public setState(paused: boolean): void {
-//         this.m_elem.innerText = this.PAUSED_TEXT[b2bt(paused)];
-//     }
-// };
-
 class TimeDisplay {
     private readonly m_elem: HTMLSpanElement;
     private m_currentFlooredTime: number = -1;
@@ -168,11 +153,8 @@ export class Control {
 
     private readonly m_control_frame: HTMLDivElement;
     
-    // private readonly m_play_btn: HTMLButtonElement;
-    // private readonly m_play_btn: HTMLAnchorElement;
     private readonly m_time_display: HTMLSpanElement;
     private readonly m_video_slider: HTMLInputElement;
-    // private readonly m_close_btn: HTMLButtonElement;
     private readonly m_close_btn: HTMLAnchorElement;
 
     private readonly m_play_btn_handler: PlayButton;
@@ -191,8 +173,6 @@ export class Control {
         this.m_control_frame.id = "ctrler";
         this.m_control_frame.classList.add("row-flex", "space-between-flex");
 
-        // this.m_play_btn = doc.createElement("button");
-        // this.m_play_btn_handler = new PlayButton(this.m_play_btn);
         this.m_play_btn_handler = new PlayButton(doc);
         this.m_play_btn_handler.button.addEventListener("pointerup", this.onClickPlayPause);
 
@@ -204,9 +184,7 @@ export class Control {
         this.m_video_slider.addEventListener("input", this.onSeek);
 
         this.m_close_btn = doc.createElement("a");
-        // this.m_close_btn = doc.createElement("button");
         this.m_close_btn.classList.add("rightside-ctrl", "a-button");
-        // this.m_close_btn.innerText = "Close";
         this.m_close_btn.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" />`;
         this.m_close_btn.addEventListener("pointerup", this.onClickClose);
 
@@ -288,11 +266,6 @@ export class Control {
 
         this.m_play_btn_handler.setState(this.m_video.paused);
     };
-
-    // private onClickClose = () => {
-    //     this.m_parentWnd.close();
-    //     window.focus();
-    // };
 
     private onSeek = () => {
         if (!this.m_video || !this.m_video_handler) return;

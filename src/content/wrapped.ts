@@ -1,5 +1,3 @@
-import type { AppFTs } from "./features"
-
 interface AttrWrappedElement {
     width: string
     height: string
@@ -28,14 +26,10 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
     protected abstract restoreAttrs(): void;
     protected abstract beforePull(): boolean;
     protected abstract beforePush(): void;
-    public abstract loadElement(ft: AppFTs): E | null;
+    public abstract loadElement(selector: string | null): E | null;
 
     get element(): E | null {
         return this.m_elem;
-    }
-
-    public isMoved(): boolean {
-        return this.m_isMoved;
     }
 
     constructor(parent: Node) {
@@ -59,7 +53,6 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
         parent.insertBefore(this.m_placeholder, this.m_elem);
         this.m_dstParent.appendChild(this.m_elem);
 
-        console.log("pull();");
         this.m_isMoved = true;
     }
 
@@ -75,13 +68,46 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> {
             parent.removeChild(this.m_placeholder);
         }
 
-        console.log("push();");
+        this.m_isMoved = false;
+        this.m_elem = null;
+    }
+};
+
+abstract class UnmovedVideoWrapper extends ElementWrapper<HTMLVideoElement, AttrWrappedVideo> {
+    protected m_video_frame: HTMLVideoElement;
+    constructor(parent: Node) {
+        super(parent);
+        this.m_video_frame = document.createElement("video");
+    }
+
+    public override async pull() {
+        if (!this.m_elem || this.m_isMoved) return;
+
+        const parent = this.m_elem.parentNode;
+        if (!this.beforePull()) return;
+
+        parent?.insertBefore(this.m_placeholder, this.m_elem);
+        this.m_video_frame.srcObject = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        this.m_dstParent.appendChild(this.m_video_frame);
+        this.m_isMoved = true;
+    }
+
+    public override push(): void {
+        if (!this.m_elem || this.m_isMoved) return;
+
+        this.beforePush();
+        const parent = this.m_placeholder.parentNode;
+        if (parent) {
+            parent.removeChild(this.m_placeholder);
+        }
+        this.m_video_frame.srcObject = null;
         this.m_isMoved = false;
         this.m_elem = null;
     }
 };
 
 export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVideo> {
+// export class WrappedVideo extends UnmovedVideoWrapper {
     private m_thumbnail: HTMLImageElement;
 
     constructor(parent: Node) {
@@ -93,23 +119,12 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
         return "video-placeholder";
     }
 
-    public loadElement(ft: AppFTs): HTMLVideoElement | null {
+    public loadElement(selector: string | null): HTMLVideoElement | null {
         if (this.m_elem && this.m_isMoved) {
             this.push();
         }
 
-        return this.m_elem = ft.video();
-        // const currentUrl = extractApps();
-        // console.log("service: ", currentUrl);
-        // this.m_elem = mineElement[currentUrl].video();
-        // return this.m_elem;
-        // return this.m_elem = mineElement[currentUrl].video();
-
-        // const elems = document.querySelectorAll("video");
-        // if (elems.length === 0) {
-        //     return null;
-        // }
-        // return this.m_elem = this.fillter(elems);
+        return selector ? this.m_elem = document.querySelector(selector) : null;
     }
 
     protected storeAttrs(): AttrWrappedVideo | null {
@@ -161,6 +176,16 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
         if (parent.contains(this.m_thumbnail))
             parent.removeChild(this.m_thumbnail);
     }
+
+    public bindDataChanged(callback: () => unknown): void {
+        this.m_elem?.addEventListener("canplay", callback);
+        this.m_elem?.addEventListener("ended", callback);
+    }
+
+    public unbindDataChanged(callback: () => unknown): void {
+        this.m_elem?.removeEventListener("canplay", callback);
+        this.m_elem?.removeEventListener("ended", callback);
+    }
 };
 
 export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrappedCanvas> {
@@ -172,23 +197,12 @@ export class WrappedCanvas extends ElementWrapper<HTMLCanvasElement, AttrWrapped
         return "comment-placeholder";
     }
 
-    public loadElement(ft: AppFTs): HTMLCanvasElement | null {
+    public loadElement(selector: string | null): HTMLCanvasElement | null {
         if (this.m_elem && this.m_isMoved) {
             this.push();
         }
 
-        if (!ft.canvasRequired) return this.m_elem = null;
-        return this.m_elem = ft.canvas();
-
-
-        // const currentUrl = extractApps();
-        // console.log("service: ", currentUrl);
-        // return this.m_elem = mineElement[currentUrl].canvas();
-        // const elems = document.querySelectorAll("canvas");
-        // if (elems.length === 0) {
-        //     return null;
-        // }
-        // return this.m_elem = this.fillter(elems);
+        return selector ? this.m_elem = document.querySelector(selector): null;
     }
 
     protected storeAttrs(): AttrWrappedCanvas | null {
