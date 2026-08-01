@@ -1,4 +1,4 @@
-import styles from "@/css/main.css";
+import styles from "@/css/main.scss";
 
 import { DOMCtrler } from "@/content/domctrler";
 import { FeatureContext } from "@/content/features";
@@ -21,28 +21,21 @@ import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from
         }
 
         styles.use();
-        if (!pipDoc.head.hasChildNodes()) {
-            console.log("style does not exist.");
-            const style = document.querySelector("style[pnipinp=pnipinp-stylesheet]");
-            if (!style) {
-                console.log("Failed to fetch stylesheet.");
-                return;
-            }
-            pipDoc.head.appendChild(style);
-        }
-
-        pipDoc.body.classList.add("column-flex", "space-between-flex");
-
+        
         const ftCtx = new FeatureContext();
-        console.log(ftCtx.updateValue().type);
+        const ftTmp = ftCtx.getValue();
+        if (ftTmp.type === "youtube") {
+            pipWin.alert("This extension can display the video on PiP but can be interrupted video playing.");
+        }
+        console.log(ftTmp.type);
         const domCtrl = new DOMCtrler(pipWin, ftCtx);
 
         const argsCtx = {
-            collection: new AttrsCollection(),
-            loadCanvas: domCtrl.reloadCanvas.bind(domCtrl),
-            loadElements: domCtrl.reloadElement.bind(domCtrl),
-            releaseElements: domCtrl.releaseElement.bind(domCtrl),
-            resize: domCtrl.resize.bind(domCtrl),
+            collection: new AttrsCollection(),                          // for detect initialized the canvas of Nicovideo comment
+            loadCanvas: domCtrl.reloadCanvas.bind(domCtrl),             // for reload the canvas element
+            loadElements: domCtrl.reloadElement.bind(domCtrl),          // for reload the video and the canvas
+            releaseElements: domCtrl.releaseElement.bind(domCtrl),      // for release the video and the canvas
+            resize: domCtrl.resizeContents.bind(domCtrl),               // for resize contents
             getCanvas: () => domCtrl.contents.canvas.element,
             getVideo: () => domCtrl.contents.video.element
         } satisfies HandlerArgsContext;
@@ -68,7 +61,7 @@ import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from
         });
         observer.observe(document, { attributes: true, childList: true, subtree: true });
 
-        pipWin.addEventListener("resize", domCtrl.resize.bind(domCtrl));
+        pipWin.addEventListener("resize", domCtrl.resizeContents.bind(domCtrl));
 
         pipWin.addEventListener("pagehide", () => {
             observer.disconnect();
@@ -83,6 +76,9 @@ import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from
             const ft = ftCtx.updateValue();
             if ("onURLModified" in ft.behaviours && ft.type === ft.behaviours.type) {
                 ft.behaviours.onURLModified(argsCtx);
+            }
+            if (ft.type === "youtube") {
+                pipWin.alert("This extension can display the video on PiP but can be interrupted video playing.");
             }
             console.log("service: ", ft.type);
         });

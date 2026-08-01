@@ -1,24 +1,41 @@
-class PlayButton {
-    private readonly m_elem: HTMLAnchorElement;
+class AButton {
+    protected readonly m_elem: HTMLAnchorElement;
+    get element(): HTMLAnchorElement { return this.m_elem; }
+    constructor(doc: Document) {
+        this.m_elem = doc.createElement("a");
+    }
+};
 
-    get button() { return this.m_elem; }
+class PlayButton extends AButton {
+    private static readonly m_CLASS_PLAYING = "play-button--playing";
+    private static readonly m_CLASS_PAUSING = "play-button--pausing";
 
-    constructor(document: Document) {
-        this.m_elem = document.createElement("a");
-        this.m_elem.classList.add("a-button", "playing");
-        this.m_elem.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=5722&format=png&color=ffffff" alt="play--v1" id="play-btn"><img width="24" height="24" src="https://img.icons8.com/?size=24&id=85882&format=png&color=ffffff" alt="pause--v1" id="pause-btn">`;
+    constructor(doc: Document) {
+        super(doc);
+        this.m_elem.classList.add("play-button", PlayButton.m_CLASS_PLAYING);
+        this.m_elem.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=5722&format=png&color=ffffff" alt="play--v1" id="play-btn" class="img-button--play thema--dark" /><img width="24" height="24" src="https://img.icons8.com/?size=24&id=85882&format=png&color=ffffff" alt="pause--v1" id="pause-btn" class="img-button--pause thema--dark" />
+        <img width="24" height="24" src="https://img.icons8.com/?size=24&id=5722&format=png&color=000000" alt="play--v1" id="play-btn" class="img-button--play thema--light" /><img width="24" height="24" src="https://img.icons8.com/?size=24&id=85882&format=png&color=000000" alt="pause--v1" id="pause-btn" class="img-button--pause thema--light" />`;
         this.setState(true);
     }
     
     public setState(paused: boolean): void {
         if (paused) {
-            this.m_elem.classList.remove("playing");
-            this.m_elem.classList.add("pausing");
+            this.m_elem.classList.remove(PlayButton.m_CLASS_PLAYING);
+            this.m_elem.classList.add(PlayButton.m_CLASS_PAUSING);
         }
         else {
-            this.m_elem.classList.remove("pausing");
-            this.m_elem.classList.add("playing");
+            this.m_elem.classList.remove(PlayButton.m_CLASS_PAUSING);
+            this.m_elem.classList.add(PlayButton.m_CLASS_PLAYING);
         }
+    }
+};
+
+class CloseButton extends AButton {
+    constructor(doc: Document) {
+        super(doc);
+        this.m_elem.classList.add("close-button");
+        this.m_elem.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" class="img-button--close thema--dark" />
+        <img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=000000" class="img-button--close thema--light" />`;
     }
 };
 
@@ -32,10 +49,12 @@ class TimeDisplay {
         return `${this.m_currentFormattedTime}/${this.m_formattedDuration}`;
     }
 
-    constructor(display: HTMLSpanElement) {
-        this.m_elem = display;
+    get element(): HTMLSpanElement { return this.m_elem; }
+
+    constructor(doc: Document) {
+        this.m_elem = doc.createElement("span");
         this.m_elem.id = "time-display";
-        this.m_elem.classList.add("ctrlleft");
+        this.m_elem.classList.add("time-display");
         this.m_elem.innerText = this.genFormatted();
     }
 
@@ -90,11 +109,14 @@ class VideoSlider {
     private readonly m_elem: HTMLInputElement;
     private readonly N_SPLITS = 10000;
 
-    constructor(slider: HTMLInputElement) {
-        this.m_elem = slider;
+    get element(): HTMLInputElement { return this.m_elem; }
+
+    constructor(doc: Document) {
+        this.m_elem = doc.createElement("input");
         this.m_elem.type = "range";
         this.m_elem.min = "0";
         this.m_elem.max = String(this.N_SPLITS);
+        this.m_elem.classList.add("progress-bar");
     }
 
     public getPosition(): number {
@@ -152,14 +174,11 @@ export class Control {
     private onClickClose: () => void;
 
     private readonly m_control_frame: HTMLDivElement;
-    
-    private readonly m_time_display: HTMLSpanElement;
-    private readonly m_video_slider: HTMLInputElement;
-    private readonly m_close_btn: HTMLAnchorElement;
+    private readonly m_close_btn: CloseButton;
 
-    private readonly m_play_btn_handler: PlayButton;
-    private readonly m_time_display_handler: TimeDisplay;
-    private readonly m_video_slider_handler: VideoSlider;
+    private readonly m_play_btn: PlayButton;
+    private readonly m_time_display: TimeDisplay;
+    private readonly m_video_slider: VideoSlider;
 
     constructor(wnd: Window) {
         const doc = wnd.document;
@@ -171,27 +190,37 @@ export class Control {
 
         this.m_control_frame = doc.createElement("div");
         this.m_control_frame.id = "ctrler";
-        this.m_control_frame.classList.add("row-flex", "space-between-flex");
+        this.m_control_frame.classList.add("controller", "controller-thema--dark");
 
-        this.m_play_btn_handler = new PlayButton(doc);
-        this.m_play_btn_handler.button.addEventListener("pointerup", this.onClickPlayPause);
+        const leftsideControl = doc.createElement("div");
+        leftsideControl.classList.add("controller__left");
 
-        this.m_time_display = doc.createElement("span");
-        this.m_time_display_handler = new TimeDisplay(this.m_time_display);
+        const rightsideControl = doc.createElement("div");
+        rightsideControl.classList.add("controller__right");
 
-        this.m_video_slider = doc.createElement("input");
-        this.m_video_slider_handler = new VideoSlider(this.m_video_slider);
-        this.m_video_slider.addEventListener("input", this.onSeek);
+        this.m_play_btn = new PlayButton(doc);
+        this.m_play_btn.element.addEventListener("pointerup", this.onClickPlayPause);
 
-        this.m_close_btn = doc.createElement("a");
-        this.m_close_btn.classList.add("rightside-ctrl", "a-button");
-        this.m_close_btn.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" />`;
-        this.m_close_btn.addEventListener("pointerup", this.onClickClose);
+        this.m_time_display = new TimeDisplay(doc);
 
-        this.m_control_frame.appendChild(this.m_play_btn_handler.button);
-        this.m_control_frame.appendChild(this.m_time_display);
-        this.m_control_frame.appendChild(this.m_video_slider);
-        this.m_control_frame.appendChild(this.m_close_btn);
+        leftsideControl.appendChild(this.m_play_btn.element);
+        leftsideControl.appendChild(this.m_time_display.element);
+
+        this.m_video_slider = new VideoSlider(doc);
+        this.m_video_slider.element.addEventListener("input", this.onSeek);
+
+        // this.m_close_btn = doc.createElement("a");
+        // this.m_close_btn.classList.add("close-button");
+        // this.m_close_btn.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" class="img-button--close thema--dark" />
+        // <img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=000000" class="img-button--close thema--light" />`;
+        this.m_close_btn = new CloseButton(doc);
+        this.m_close_btn.element.addEventListener("pointerup", this.onClickClose);
+
+        rightsideControl.appendChild(this.m_close_btn.element);
+
+        this.m_control_frame.appendChild(leftsideControl);
+        this.m_control_frame.appendChild(this.m_video_slider.element);
+        this.m_control_frame.appendChild(rightsideControl);
     }
 
     get element(): HTMLDivElement {
@@ -212,7 +241,7 @@ export class Control {
     public updateElements(): void {
         if (!this.m_video || !this.m_video_handler) return;
 
-        this.m_play_btn_handler.setState(this.m_video.paused);
+        this.m_play_btn.setState(this.m_video.paused);
         this.onDurationChange();
         this.onTimeUpdate();
     }
@@ -238,21 +267,21 @@ export class Control {
 
     private onDurationChange = () => {
         if (!this.m_video || !this.m_video_handler) return;
-        this.m_time_display_handler.updateDuration(this.m_video_handler.getDuration());
+        this.m_time_display.updateDuration(this.m_video_handler.getDuration());
     };
 
     private onTimeUpdate = () => {
         if (!this.m_video || !this.m_video_handler) return;
-        this.m_time_display_handler.updateTime(this.m_video_handler.getTime());
-        this.m_video_slider_handler.setPostion(this.m_video_handler.getPosition());
+        this.m_time_display.updateTime(this.m_video_handler.getTime());
+        this.m_video_slider.setPostion(this.m_video_handler.getPosition());
     };
 
     private onPlay = () => {
-        this.m_play_btn_handler.setState(false);
+        this.m_play_btn.setState(false);
     };
 
     private onPause = () => {
-        this.m_play_btn_handler.setState(true);
+        this.m_play_btn.setState(true);
     };
 
     private onClickPlayPause = async () => {
@@ -264,11 +293,11 @@ export class Control {
             this.m_video.pause();
         }
 
-        this.m_play_btn_handler.setState(this.m_video.paused);
+        this.m_play_btn.setState(this.m_video.paused);
     };
 
     private onSeek = () => {
         if (!this.m_video || !this.m_video_handler) return;
-        this.m_video_handler.setPosition(this.m_video_slider_handler.getPosition());
+        this.m_video_handler.setPosition(this.m_video_slider.getPosition());
     };
 };

@@ -1,0 +1,83 @@
+@charset "UTF-8";
+
+%rflex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+%unstretchable-uniform-rflex {
+    @extend %rflex;
+    justify-content: space-between;
+    flex: none;
+}
+
+%a-button {
+    $a-button-transition: 0.3s;
+
+    display: flex;
+    border-radius: 50%;
+    transition: 0.3s;
+    padding: 5px;
+
+    &:hover {
+        background-color: #808080;
+    }
+    [class^=img-button--] {
+        padding: 0;
+    }
+}
+
+.play-button {
+    @extend %a-button;
+    &.play-button--playing .img-button--play {
+        display: none;
+    }
+    &.play-button--pausing .img-button--pause {
+        display: none;
+    }
+}
+
+.time-display {
+    white-space: pre;
+    font-family: monospace;
+}
+
+.progress-bar {
+    width: 100%;
+}
+
+.close-button {
+    @extend %a-button;
+}
+
+.controller {
+    @extend %unstretchable-uniform-rflex;
+    width: 100%;
+    
+    &__left {
+        @extend %rflex;
+        justify-content: start;
+    }
+    &__right {
+        @extend %rflex;
+        justify-content: end;
+    }
+}
+
+.controller-thema {
+    &--dark .thema--light {
+        display: none;
+    }
+    &--light .thema--dark {
+        display: none;
+    }
+    &--dark, &--dark *:not(%a-button:hover, %a-button > [class^=img-button--]) {
+        background-color: #202020;
+        color: white;
+    }
+    &--light, &--light *:not(%a-button:hover, %a-button > [class^=img-button--]) {
+        background-color: gainsboro;
+        color: black;
+    }
+}

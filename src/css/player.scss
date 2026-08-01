@@ -1,0 +1,59 @@
+@charset "UTF-8";
+
+%centering-flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-content--pnipinp {
+    z-index: 1;
+}
+
+.canvas-content--pnipinp {
+    z-index: 2;
+}
+
+.player__inner {
+    @extend %centering-flex;
+
+    position: relative;
+}
+
+.player {
+    @extend %centering-flex;
+
+    container: player-frame / size;
+
+    width: 100%;
+    height: stretch;
+    min-height: 0;
+
+    background-color: black;
+}
+
+.player * {
+    overflow: clip;
+}
+
+// @container player-frame (orientation: landscape) {
+//     .video-content--pnipinp {
+//         width: auto;
+//         height: 100%;
+//     }
+//     .canvas-content--pnipinp {
+//         width: auto;
+//         height: 100%;
+//     }
+// }
+
+// @container player-frame (orientation: portrait) {
+//     .video-content--pnipinp {
+//         width: 100%;
+//         height: auto;
+//     }
+//     .canvas-content--pnipinp {
+//         width: 100%;
+//         height: auto;
+//     }
+// }

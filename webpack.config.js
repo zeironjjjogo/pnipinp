@@ -17,7 +17,7 @@ export default {
                 exclude: /node_modules/
             },
             {
-                test: /\.css$/,
+                test: /\.scss$/,
                 use: [
                     {
                         loader: "style-loader",
@@ -28,6 +28,7 @@ export default {
                         }
                     },
                     { loader: "css-loader", options: { sourceMap: true } },
+                    { loader: "sass-loader" }
                 ],
             }
         ]
