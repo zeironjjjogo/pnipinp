@@ -1,0 +1,8 @@
+{
+    "extensionDescription": {
+        "message": "There is a picture in picture that be able to display with comments."
+    },
+    "alertYoutube": {
+        "message": "This extension can display the video on PiP but can be interrupted video playing."
+    }
+}

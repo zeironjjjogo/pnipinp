@@ -1,4 +1,4 @@
-import type { WrappedCanvas, WrappedVideo } from "@/content/wrapped";
+import type { WrappedCanvas, WrappedVideo } from "@/core/player/wrapped";
 
 type Size = { width: number, height: number };
 const Size = {
@@ -7,10 +7,9 @@ const Size = {
 
 export class ResizeHandler {
     private readonly m_video: HTMLVideoElement;
-    private readonly m_renewAttrs: () => unknown;
-    private readonly m_resizer: { resize() : void; };
+    private readonly m_handler: () => unknown;
 
-    constructor(v: HTMLVideoElement, renewAttrs: () => unknown, resizer: { resize(): void; }) {
+    constructor(v: HTMLVideoElement, handler: () => unknown) {
         // v.addEventListener("canplay", this.onCanplay);
         // v.addEventListener("canplaythrough", this.onCanPlayThrough);
         // v.addEventListener("emptied", this.onEmptied);
@@ -20,8 +19,7 @@ export class ResizeHandler {
         // v.addEventListener("loadstart", this.onLoadStart);
         v.addEventListener("resize", this.onResize);
         this.m_video = v;
-        this.m_resizer = resizer;
-        this.m_renewAttrs = renewAttrs;
+        this.m_handler = handler;
     }
 
     public releaseVideo(): void {
@@ -65,8 +63,7 @@ export class ResizeHandler {
 
     public onResize = () => {
         console.log("onResize");
-        this.m_renewAttrs();
-        this.m_resizer.resize();
+        this.m_handler();
     };
 };
 
@@ -77,11 +74,27 @@ export class Resizer {
     private readonly m_wv: WrappedVideo;
     private readonly m_wc: WrappedCanvas;
 
+    private m_resize_handler: ResizeHandler | null = null;
+
     constructor(region: HTMLDivElement, player: HTMLDivElement, wVideo: WrappedVideo, wCanvas: WrappedCanvas) {
         this.m_region = region;
         this.m_player = player;
         this.m_wv = wVideo;
         this.m_wc = wCanvas;
+    }
+
+    public onVideoModified(): void {
+        this.m_wv.reloadAttrs();
+        this.resize();
+    }
+
+    public setVideo() {
+        if (this.m_wv.element)
+            this.m_resize_handler = new ResizeHandler(this.m_wv.element, this.onVideoModified.bind(this));
+    }
+
+    public releaseVideo() {
+        this.m_resize_handler?.releaseVideo();
     }
 
     private static makeInscribed(region: Size, aspect: number): Size {

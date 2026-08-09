@@ -1,4 +1,4 @@
-import { formatURL, sleep } from "@/content/util";
+import { formatURL, sleep } from "@/util/util";
 
 // observing URL modified. for push back elements on nicovideo.
 export class URLObserver {

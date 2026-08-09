@@ -2,22 +2,23 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
-    "outDir": "./output",
+    "rootDir": "../",
+    "outDir": "../../tmp/content/",
+
+    "paths": {
+      "@/*": ["./*"],
+      ":=/*": ["../define/*"]
+    },
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "es6",
-    "target": "es2020",
+    "module": "esnext",
+    "target": "esnext",
     "types": ["chrome"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
     // and npm install -D @types/node
-
-    "paths": {
-      "@/*": ["./src/*"]
-    },
 
     // Other Outputs
     "sourceMap": true,

@@ -2,7 +2,10 @@
     "manifest_version": 3,
     "name": "PniPinP",
     "version": "1.0",
-    "permissions": ["activeTab", "scripting"],
+
+    "description": "__MSG_extensionDescription__",
+
+    "permissions": ["activeTab", "scripting", "storage"],
     "background": {
         "service_worker": "background.js"
     },
@@ -18,5 +21,7 @@
             "resources": ["dist/*.map"],
             "matches": ["<all_urls>"]
         }
-    ]
+    ],
+    "options_page": "./option.html",
+    "default_locale": "ja"
 }

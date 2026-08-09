@@ -148,3 +148,5 @@ vite.config.ts.timestamp-*
 .vscode/
 output/
 !src/@types/*.d.ts
+.ignore/*
+dst/*

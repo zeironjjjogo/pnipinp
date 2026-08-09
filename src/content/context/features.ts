@@ -1,4 +1,4 @@
-import type { HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/content/util";
+import type { HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
 
 type NicoVideoFT = {
     readonly type: "nicovideo";

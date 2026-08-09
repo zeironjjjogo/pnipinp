@@ -1,3 +1,6 @@
+import { ConfigHolder } from "@/context/config";
+import type { VideoController } from "@/core/controller/videoctrler";
+
 class AButton {
     protected readonly m_elem: HTMLAnchorElement;
     get element(): HTMLAnchorElement { return this.m_elem; }
@@ -190,7 +193,11 @@ export class Control {
 
         this.m_control_frame = doc.createElement("div");
         this.m_control_frame.id = "ctrler";
-        this.m_control_frame.classList.add("controller", "controller-thema--dark");
+        this.m_control_frame.classList.add("controller");
+
+        chrome.storage.sync.get("useDarkthema").then(val => {
+            this.m_control_frame.classList.add(`controller-thema--${Boolean(val["useDarkthema"]) ? "dark" : "light"}`);
+        });
 
         const leftsideControl = doc.createElement("div");
         leftsideControl.classList.add("controller__left");
@@ -209,10 +216,6 @@ export class Control {
         this.m_video_slider = new VideoSlider(doc);
         this.m_video_slider.element.addEventListener("input", this.onSeek);
 
-        // this.m_close_btn = doc.createElement("a");
-        // this.m_close_btn.classList.add("close-button");
-        // this.m_close_btn.innerHTML = `<img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=ffffff" class="img-button--close thema--dark" />
-        // <img width="24" height="24" src="https://img.icons8.com/?size=24&id=83376&format=png&color=000000" class="img-button--close thema--light" />`;
         this.m_close_btn = new CloseButton(doc);
         this.m_close_btn.element.addEventListener("pointerup", this.onClickClose);
 
@@ -299,5 +302,104 @@ export class Control {
     private onSeek = () => {
         if (!this.m_video || !this.m_video_handler) return;
         this.m_video_handler.setPosition(this.m_video_slider.getPosition());
+    };
+};
+
+export class NController {
+    private readonly m_videoCtrler: VideoController;
+
+    private readonly m_controllerFrame: HTMLDivElement;
+
+    private readonly m_playButton: PlayButton;
+    private readonly m_timeDisplay: TimeDisplay;
+    private readonly m_progressBar: VideoSlider;
+    private readonly m_closeButton: CloseButton;
+
+    private onClickClose: () => void;
+
+    get element(): HTMLDivElement { return this.m_controllerFrame; }
+
+    constructor(wnd: Window, vc: VideoController) {
+        const doc = wnd.document;
+
+        this.onClickClose = () => {
+            wnd.close();
+            window.focus();
+        };
+
+        this.m_videoCtrler = vc;
+
+        this.m_controllerFrame = doc.createElement("div");
+        this.m_controllerFrame.id = "ctrler";
+        this.m_controllerFrame.classList.add("controller");
+
+        const config = ConfigHolder.getConfig();
+        if (config) {
+            this.m_controllerFrame.classList.add(`controller-thema--${config.useDarkThema ? "dark": "light"}`);
+        }
+
+        const leftSideControl = doc.createElement("div");
+        leftSideControl.classList.add("controller__left");
+        
+        this.m_playButton = new PlayButton(doc);
+
+        this.m_timeDisplay = new TimeDisplay(doc);
+
+        leftSideControl.appendChild(this.m_playButton.element);
+        leftSideControl.appendChild(this.m_timeDisplay.element);
+
+        this.m_progressBar = new VideoSlider(doc);
+
+        const rightSideControl = doc.createElement("div");
+        rightSideControl.classList.add("controller__right");
+
+        this.m_closeButton = new CloseButton(doc);
+        rightSideControl.appendChild(this.m_closeButton.element);
+
+        this.m_controllerFrame.appendChild(leftSideControl);
+        this.m_controllerFrame.appendChild(this.m_progressBar.element);
+        this.m_controllerFrame.appendChild(rightSideControl);
+
+        this.initHandlers();
+    }
+
+    private initHandlers(): void {
+        this.m_playButton.element.addEventListener("pointerup", this.onClickPlayPause);
+        this.m_progressBar.element.addEventListener("input", this.onSeek);
+        this.m_closeButton.element.addEventListener("pointerup", this.onClickClose);
+
+        this.m_videoCtrler.setCallback("durationchange", (data) => {
+            if ("duration" in data)
+                this.m_timeDisplay.updateDuration(data.duration);
+        });
+        this.m_videoCtrler.setCallback("pause", () => {
+            this.m_playButton.setState(true);
+        });
+        this.m_videoCtrler.setCallback("play", () => {
+            this.m_playButton.setState(false);
+        });
+        this.m_videoCtrler.setCallback("timeupdate", (data) => {
+            if ("time" in data)
+                this.m_timeDisplay.updateTime(data.time);
+            if ("position" in data)
+                this.m_progressBar.setPostion(data.position);
+        });
+    }
+
+    private onClickPlayPause = () => {
+        const { state } = this.m_videoCtrler.togglePlaying();
+        switch (state) {
+            case "invalid":
+            case "pausing":
+                this.m_playButton.setState(true);
+                break;
+            case "playing":
+                this.m_playButton.setState(false);
+                break;
+        }
+    }
+
+    private onSeek = () => {
+        this.m_videoCtrler.setVideoPosition(this.m_progressBar.getPosition());
     };
 };
