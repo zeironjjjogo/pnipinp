@@ -14,11 +14,7 @@
     },
     "web_accessible_resources": [
         {
-            "resources": ["src/css/main.css"],
-            "matches": ["<all_urls>"]
-        },
-        {
-            "resources": ["dist/*.map"],
+            "resources": ["dst/*.map"],
             "matches": ["<all_urls>"]
         }
     ],

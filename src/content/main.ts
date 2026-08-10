@@ -2,9 +2,9 @@ import styles from "@/style/main.scss";
 
 import { DOMCtrler } from "@/core/domctrler";
 import { FeatureContext } from "@/context/features";
+import { ConfigHolder } from "@/context/config";
 import { URLObserver } from "@/observer/observer";
 import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from "@/util/util";
-import { ConfigHolder } from "@/context/config";
 
 (async () => {
     try {
@@ -27,11 +27,6 @@ import { ConfigHolder } from "@/context/config";
         console.log("configs: ", ConfigHolder.getConfig());
         
         const ftCtx = new FeatureContext();
-        // const ftTmp = ftCtx.getValue();
-        // if (ftTmp.type === "youtube") {
-        //     pipWin.alert("This extension can display the video on PiP but can be interrupted video playing.");
-        // }
-        // console.log(ftTmp.type);
         const domCtrl = new DOMCtrler(pipWin, ftCtx);
 
         const argsCtx = {
@@ -88,18 +83,6 @@ import { ConfigHolder } from "@/context/config";
             console.log("service: ", ft.type);
         };
 
-        // const urlObs = new URLObserver((url) => {
-        //     console.log("URL modified: " + url);
-
-        //     const ft = ftCtx.updateValue();
-        //     if ("onURLModified" in ft.behaviours && ft.type === ft.behaviours.type) {
-        //         ft.behaviours.onURLModified(argsCtx);
-        //     }
-        //     if (ft.type === "youtube") {
-        //         pipWin.alert("This extension can display the video on PiP but can be interrupted video playing.");
-        //     }
-        //     console.log("service: ", ft.type);
-        // });
         const urlObs = new URLObserver(onURLModified);
         urlObs.start();
         

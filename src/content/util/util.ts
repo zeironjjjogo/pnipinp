@@ -65,22 +65,3 @@ export interface HandlerArgsContextBasis {
 };
 // export type HandlerArgsContext = HandlerArgsContextAppendix & HandlerArgsContextBasis;
 export type HandlerArgsContext = HandlerArgsContextBasis;
-
-export function copyStyles(src: Document, dst: Document): void {
-    [...src.styleSheets].forEach((styleSheet) => {
-        try {
-            const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join("");
-            const style = dst.createElement("style");
-            style.textContent = cssRules;
-            dst.head.appendChild(style);
-        } catch (e) {
-            console.warn(e);
-            const link = dst.createElement("link");
-            link.rel = "stylesheet";
-            link.type = styleSheet.type;
-            link.media = styleSheet.media.toString();
-            link.href = styleSheet.href || "";
-            dst.head.appendChild(link);
-        }
-    });
-}

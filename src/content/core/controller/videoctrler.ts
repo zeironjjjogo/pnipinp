@@ -95,6 +95,7 @@ export class VideoController {
 
         this.m_videoHandler({type: "durationchange"});
         this.m_videoHandler({type: "timeupdate"});
+        this.m_videoHandler({type: this.m_video.paused ? "pause": "play"});
     }
 
     private m_videoHandler = (event: { readonly type: string }) => {

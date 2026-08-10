@@ -170,7 +170,7 @@ class VideoHandler {
     }
 };
 
-export class Control {
+export class DEPRECATEDControl {
     private m_video: HTMLVideoElement | null = null;
     private m_video_handler: VideoHandler | null = null;
 
@@ -305,7 +305,7 @@ export class Control {
     };
 };
 
-export class NController {
+export class Controller {
     private readonly m_videoCtrler: VideoController;
 
     private readonly m_controllerFrame: HTMLDivElement;
