@@ -10,7 +10,7 @@
         "service_worker": "background.js"
     },
     "action": {
-        "default_title": "Move a video to PiP"
+        "default_title": "__MSG_actionDefaultTitle__"
     },
     "web_accessible_resources": [
         {

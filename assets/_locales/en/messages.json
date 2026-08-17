@@ -1,0 +1,26 @@
+{
+    "extensionDescription": {
+        "message": "There is a picture in picture that be able to display with comments."
+    },
+    "actionDefaultTitle": {
+        "message": "Launch the Picture in Picture window."
+    },
+    "alertYoutube": {
+        "message": "This extension can display the video on PiP but can be interrupted video playing."
+    },
+    "optionTitle": {
+        "message": "PniPinP-Options"  
+    },
+    "optionH1": {
+        "message": "options"
+    },
+    "optionSubmitButton": {
+        "message": "submit"
+    },
+    "useDarkThema": {
+        "message": "Apply dark thema"
+    },
+    "clickToPlay": {
+        "message": "Enable to click the player to toggle play"
+    }
+}

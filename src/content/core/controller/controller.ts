@@ -110,7 +110,7 @@ class TimeDisplay {
 
 class VideoSlider {
     private readonly m_elem: HTMLInputElement;
-    private readonly N_SPLITS = 10000;
+    private m_length: number = 100;
 
     get element(): HTMLInputElement { return this.m_elem; }
 
@@ -118,191 +118,20 @@ class VideoSlider {
         this.m_elem = doc.createElement("input");
         this.m_elem.type = "range";
         this.m_elem.min = "0";
-        this.m_elem.max = String(this.N_SPLITS);
+        this.m_elem.max = String(this.m_length);
         this.m_elem.classList.add("progress-bar");
     }
 
-    public getPosition(): number {
-        return Number(this.m_elem.value) / this.N_SPLITS;
+    public setRange(range: number) {
+        this.m_elem.max = String(range);
     }
 
-    public setPostion(pos: number): void {
-        this.m_elem.value = String(pos * this.N_SPLITS);
+    public setTime(sec: number) {
+        this.m_elem.value = String(sec);
     }
-};
-
-type EventHandler_T = ((e: Event) => unknown);
-class VideoHandler {
-    private readonly m_video: HTMLVideoElement;
-    private readonly m_handler: EventHandler_T;
-
-    constructor(video: HTMLVideoElement, handler: EventHandler_T) {
-        this.m_video = video;
-        this.m_handler = handler;
-
-        this.m_video.addEventListener("durationchange", this.m_handler);
-        this.m_video.addEventListener("timeupdate", this.m_handler);
-        this.m_video.addEventListener("play", this.m_handler);
-        this.m_video.addEventListener("pause", this.m_handler);
+    public getTime() {
+        return Number(this.m_elem.value);
     }
-
-    destructor(): void {
-        this.m_video.removeEventListener("durationchange", this.m_handler);
-        this.m_video.removeEventListener("timeupdate", this.m_handler);
-        this.m_video.removeEventListener("play", this.m_handler);
-        this.m_video.removeEventListener("pause", this.m_handler);
-    }
-
-    public setPosition(pos: number): void {
-        this.m_video.currentTime = pos * this.m_video.duration;
-    }
-
-    public getDuration(): number {
-        return this.m_video.duration;
-    }
-
-    public getTime(): number {
-        return this.m_video.currentTime;
-    }
-
-    public getPosition(): number {
-        return this.m_video.currentTime / this.m_video.duration;
-    }
-};
-
-export class DEPRECATEDControl {
-    private m_video: HTMLVideoElement | null = null;
-    private m_video_handler: VideoHandler | null = null;
-
-    private onClickClose: () => void;
-
-    private readonly m_control_frame: HTMLDivElement;
-    private readonly m_close_btn: CloseButton;
-
-    private readonly m_play_btn: PlayButton;
-    private readonly m_time_display: TimeDisplay;
-    private readonly m_video_slider: VideoSlider;
-
-    constructor(wnd: Window) {
-        const doc = wnd.document;
-
-        this.onClickClose = () => {
-            wnd.close();
-            window.focus();
-        };
-
-        this.m_control_frame = doc.createElement("div");
-        this.m_control_frame.id = "ctrler";
-        this.m_control_frame.classList.add("controller");
-
-        chrome.storage.sync.get("useDarkthema").then(val => {
-            this.m_control_frame.classList.add(`controller-thema--${Boolean(val["useDarkthema"]) ? "dark" : "light"}`);
-        });
-
-        const leftsideControl = doc.createElement("div");
-        leftsideControl.classList.add("controller__left");
-
-        const rightsideControl = doc.createElement("div");
-        rightsideControl.classList.add("controller__right");
-
-        this.m_play_btn = new PlayButton(doc);
-        this.m_play_btn.element.addEventListener("pointerup", this.onClickPlayPause);
-
-        this.m_time_display = new TimeDisplay(doc);
-
-        leftsideControl.appendChild(this.m_play_btn.element);
-        leftsideControl.appendChild(this.m_time_display.element);
-
-        this.m_video_slider = new VideoSlider(doc);
-        this.m_video_slider.element.addEventListener("input", this.onSeek);
-
-        this.m_close_btn = new CloseButton(doc);
-        this.m_close_btn.element.addEventListener("pointerup", this.onClickClose);
-
-        rightsideControl.appendChild(this.m_close_btn.element);
-
-        this.m_control_frame.appendChild(leftsideControl);
-        this.m_control_frame.appendChild(this.m_video_slider.element);
-        this.m_control_frame.appendChild(rightsideControl);
-    }
-
-    get element(): HTMLDivElement {
-        return this.m_control_frame;
-    }
-
-    public setVideo(video: HTMLVideoElement): void {
-        this.m_video = video;
-        this.m_video_handler = new VideoHandler(this.m_video, this.onModifyVideo);
-        this.updateElements();
-    }
-
-    public releaseVideo(): void {
-        this.m_video_handler?.destructor();
-        this.m_video = null;
-    }
-
-    public updateElements(): void {
-        if (!this.m_video || !this.m_video_handler) return;
-
-        this.m_play_btn.setState(this.m_video.paused);
-        this.onDurationChange();
-        this.onTimeUpdate();
-    }
-
-    private onModifyVideo = (event: Event) => {
-        if (!this.m_video || !this.m_video_handler) return;
-
-        switch (event.type) {
-            case "durationchange":
-                this.onDurationChange();
-                break;
-            case "timeupdate":
-                this.onTimeUpdate();
-                break;
-            case "play":
-                this.onPlay();
-                break;
-            case "pause":
-                this.onPause();
-                break;
-        }
-    };
-
-    private onDurationChange = () => {
-        if (!this.m_video || !this.m_video_handler) return;
-        this.m_time_display.updateDuration(this.m_video_handler.getDuration());
-    };
-
-    private onTimeUpdate = () => {
-        if (!this.m_video || !this.m_video_handler) return;
-        this.m_time_display.updateTime(this.m_video_handler.getTime());
-        this.m_video_slider.setPostion(this.m_video_handler.getPosition());
-    };
-
-    private onPlay = () => {
-        this.m_play_btn.setState(false);
-    };
-
-    private onPause = () => {
-        this.m_play_btn.setState(true);
-    };
-
-    private onClickPlayPause = async () => {
-        if (!this.m_video) return;
-
-        if (this.m_video.paused) {
-            await this.m_video.play();
-        } else {
-            this.m_video.pause();
-        }
-
-        this.m_play_btn.setState(this.m_video.paused);
-    };
-
-    private onSeek = () => {
-        if (!this.m_video || !this.m_video_handler) return;
-        this.m_video_handler.setPosition(this.m_video_slider.getPosition());
-    };
 };
 
 export class Controller {
@@ -369,8 +198,8 @@ export class Controller {
         this.m_closeButton.element.addEventListener("pointerup", this.onClickClose);
 
         this.m_videoCtrler.setCallback("durationchange", (data) => {
-            if ("duration" in data)
-                this.m_timeDisplay.updateDuration(data.duration);
+            this.m_timeDisplay.updateDuration(data.duration);
+            this.m_progressBar.setRange(data.duration);
         });
         this.m_videoCtrler.setCallback("pause", () => {
             this.m_playButton.setState(true);
@@ -379,10 +208,8 @@ export class Controller {
             this.m_playButton.setState(false);
         });
         this.m_videoCtrler.setCallback("timeupdate", (data) => {
-            if ("time" in data)
-                this.m_timeDisplay.updateTime(data.time);
-            if ("position" in data)
-                this.m_progressBar.setPostion(data.position);
+            this.m_timeDisplay.updateTime(data.time);
+            this.m_progressBar.setTime(data.time);
         });
     }
 
@@ -400,6 +227,6 @@ export class Controller {
     }
 
     private onSeek = () => {
-        this.m_videoCtrler.setVideoPosition(this.m_progressBar.getPosition());
+        this.m_videoCtrler.setVideoCurrent(this.m_progressBar.getTime());
     };
 };

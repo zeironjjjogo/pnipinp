@@ -143,11 +143,7 @@ vite.config.ts.timestamp-*
 .vite/
 
 # Added files
-*.d.ts
-*.d.ts.map
+dst/
+tmp/
 .vscode/
-output/
-!src/@types/*.d.ts
-.ignore/*
-dst/*
-tmp_release/
+.ignore/

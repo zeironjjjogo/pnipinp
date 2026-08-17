@@ -14,11 +14,15 @@ function build()
 {
     pushd "./src/$1" || exit 2;
     print_this "Start build $1";
-    webpack --mode="$2";
+    if [ "$2" == "production" ]; then
+        webpack --config "./webpack.release.js";
+    else 
+        webpack;
+    fi
     popd || exit 3;
 }
 
-readonly THIS="$(basename "$0")";
+THIS="$(basename "$0")";
 function print_this() {
     echo "[$THIS] $1";
 }
@@ -26,7 +30,7 @@ function print_this() {
 ROOT_DIR="$(pwd)";
 print_this "ROOT_DIR: $ROOT_DIR";
 print_this "BUILD_MODE: $BUILD_MODE";
-[ $VERSION ] && print_this "VERSION: $VERSION";
+[ "$VERSION" ] && print_this "VERSION: $VERSION";
 
 cd "$ROOT_DIR" || exit 1;
 build content "$BUILD_MODE";
@@ -49,14 +53,14 @@ print_this "DST_OUTPUT_DIR: $DST_OUTPUT_DIR";
 DST_FILE_NAME_STEM="pnipinp-$VERSION";
 print_this "DST_FILE_NAME_STEM: $DST_FILE_NAME_STEM";
 
-if [ ! -e $TMP_DIR ]; then
+if [ ! -e "$TMP_DIR" ]; then
     print_this "一時フォルダが見つからなかったので$TMP_DIRを作成します";
-    mkdir $TMP_DIR;
+    mkdir "$TMP_DIR";
 fi
 
-if [ ! -e $RELEASE_DIR ]; then
+if [ ! -e "$RELEASE_DIR" ]; then
     print_this "出力フォルダが見つからなかったので$RELEASE_DIRを作成します";
-    mkdir $RELEASE_DIR;
+    mkdir "$RELEASE_DIR";
 fi
 
 mkdir "$DST_OUTPUT_DIR";

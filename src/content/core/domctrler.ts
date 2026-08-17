@@ -19,7 +19,7 @@ export class DOMCtrler {
         const mainContainer = doc.createElement("div");
         mainContainer.classList.add("main");
 
-        this.m_videoController = new VideoController();
+        this.m_videoController = new VideoController(ft);
 
         const contents = new DOMContents(wnd, ft);
         const controller = new Controller(wnd, this.m_videoController);

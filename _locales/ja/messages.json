@@ -1,8 +1,0 @@
-{
-    "extensionDescription": {
-        "message": "ニコニコ動画をコメント付きで表示できるピクチャーインピクチャーです。"
-    },
-    "alertYoutube": {
-        "message": "この拡張機能によってYoutubeの再生中にエラーが発生する可能性が高いです。"
-    }
-}

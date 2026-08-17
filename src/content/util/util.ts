@@ -65,3 +65,21 @@ export interface HandlerArgsContextBasis {
 };
 // export type HandlerArgsContext = HandlerArgsContextAppendix & HandlerArgsContextBasis;
 export type HandlerArgsContext = HandlerArgsContextBasis;
+
+export type ValueOf<C extends object, K extends keyof C> = C[K];
+
+export function containsKey<T extends object>(keyObj: string | number | symbol, container: T): keyObj is (keyof T) {
+    return keyObj in container;
+}
+
+export type ArgsType<T extends (...args: any) => any> = T extends (...args: infer Args) => any ? Args : any;
+
+export interface BoundFunc<ArgsT extends any[], ReturnT> {
+    args: ArgsT;
+    func(...args: ArgsT): ReturnT;
+}
+export function executeBoundFunc<ArgsT extends any[], ReturnT>(bf: BoundFunc<ArgsT, ReturnT>): ReturnT {
+    return bf.func(...bf.args);
+}
+
+export const nullFunc = () => {};

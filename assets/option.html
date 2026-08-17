@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>設定:pnipinp</title>
+        <style>
+            .thema--light {
+                color: black;
+                background-color: gainsboro;
+            }
+            .thema--dark {
+                color: white;
+                background-color: #202020;
+            }
+            body {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                align-items: center;
+            }
+            #form-area {
+                display: flex;
+                flex-direction: column;
+                width: 75%;
+                justify-content: center;
+                align-items: center;
+            }
+            .option-frame {
+                display: grid;
+                grid-template-columns: 95% 5%;
+                padding: 0.5rem;
+                border: 1px solid;
+                width: 100%;
+            }
+            .option-label {
+                font-size: 1rem;
+            }
+            .option-checkbox {
+                margin: 0;
+            }
+            .original-button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                text-decoration: none;
+                color: #ffffff;
+                font-size: 18px;
+                border-radius: 5px;
+                width: 200px;
+                height: 40px;
+                font-weight: bold;
+                transition: 0.3s;
+                background-color: #1976d2;
+                margin: 1rem;
+            }
+
+            .original-button:hover {
+                opacity: .7;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>pnipinp 設定</h1>
+        <div id="form-area"></div>
+        <a href="#" class="original-button">ボタン</a>
+    </body>
+    <script src="./dst/option.js"></script>
+</html>

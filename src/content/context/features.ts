@@ -1,4 +1,5 @@
 import type { HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
+import { NicovideoSeeker } from "@/context/nicovideoseek";
 
 type NicoVideoFT = {
     readonly type: "nicovideo";
@@ -15,6 +16,8 @@ type NicoVideoFT = {
         onChildListModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onURLModified(kwargs: HandlerArgsContextBasis): unknown;
     }
+    readonly controllerRequired: true;
+    readonly controller: new () => NicovideoSeeker;
 };
 const NicoVideoFT = {
     make(): NicoVideoFT {
@@ -58,7 +61,9 @@ const NicoVideoFT = {
                 onURLModified({ releaseElements }) {
                     releaseElements();
                 }
-            }
+            },
+            controllerRequired: true,
+            controller: NicovideoSeeker
         } as const;
     }
 };
@@ -77,6 +82,7 @@ type NicoVideoShortsFT = {
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onChildListModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
     }
+    readonly controllerRequired: false;
 };
 const NicoVideoShortsFT = {
     make(): NicoVideoShortsFT {
@@ -126,7 +132,8 @@ const NicoVideoShortsFT = {
                         }
                     }
                 }
-            }
+            },
+            controllerRequired: false
         } as const;
     }
 };
@@ -143,6 +150,7 @@ type LiveNicoVideoFT = {
         readonly type: "nicovideo:live";
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
     }
+    readonly controllerRequired: false;
 };
 type YoutubeFT = {
     readonly type: "youtube";
@@ -155,6 +163,7 @@ type YoutubeFT = {
         readonly type: "youtube";
         onMetaDataLoaded(resize: () => unknown): unknown;
     }
+    readonly controllerRequired: false;
 };
 type YoutubeShortsFT = {
     readonly type: "youtube:shorts";
@@ -167,6 +176,7 @@ type YoutubeShortsFT = {
         readonly type: "youtube:shorts";
         onMetaDataLoaded(resize: () => unknown): unknown;
     }
+    readonly controllerRequired: false;
 };
 type DefaultsFT = {
     readonly type: "other";
@@ -178,6 +188,7 @@ type DefaultsFT = {
     readonly behaviours: {
         readonly type: "other";
     }
+    readonly controllerRequired: false;
 };
 export type AppFTs = NicoVideoFT | NicoVideoShortsFT | LiveNicoVideoFT | YoutubeFT | YoutubeShortsFT | DefaultsFT;
 
@@ -204,7 +215,8 @@ export class FeatureContext implements IContext<AppFTs> {
                     loadCanvas();
                 }
             }
-        }
+        },
+        controllerRequired: false
     } as const;
     private static readonly Youtube_FT: YoutubeFT = {
         type: "youtube",
@@ -219,7 +231,8 @@ export class FeatureContext implements IContext<AppFTs> {
                 console.log("loadstart");
                 resize();
             }
-        }
+        },
+        controllerRequired: false
     } as const;
     private static readonly YoutubeShorts_FT: YoutubeShortsFT = {
         type: "youtube:shorts",
@@ -234,7 +247,8 @@ export class FeatureContext implements IContext<AppFTs> {
                 console.log("loadstart");
                 resize();
             }
-        }
+        },
+        controllerRequired: false
     } as const;
     private static readonly Default_FT: DefaultsFT = {
         type: "other",
@@ -245,7 +259,8 @@ export class FeatureContext implements IContext<AppFTs> {
         },
         behaviours: {
             type: "other"
-        }
+        },
+        controllerRequired: false
     } as const;
 
     private m_ft: AppFTs = this.updateValue();

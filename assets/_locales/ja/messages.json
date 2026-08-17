@@ -1,0 +1,26 @@
+{
+    "extensionDescription": {
+        "message": "ニコニコ動画をコメント付きで表示できるピクチャーインピクチャーです。"
+    },
+    "actionDefaultTitle": {
+        "message": "ピクチャーインピクチャー(PniPinP)を起動。"
+    },
+    "alertYoutube": {
+        "message": "この拡張機能によってYoutubeの再生中にエラーが発生する可能性が高いです。"
+    },
+    "optionTitle": {
+        "message": "PniPinP-設定"  
+    },
+    "optionH1": {
+        "message": "オプション"
+    },
+    "optionSubmitButton": {
+        "message": "決定"
+    },
+    "useDarkThema": {
+        "message": "ダークテーマを利用する"
+    },
+    "clickToPlay": {
+        "message": "プレイヤーをクリックで再生を切り替える"
+    }
+}

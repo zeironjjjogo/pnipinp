@@ -1,9 +1,9 @@
-type EventCallback_T = (event: Event) => void;
-interface IListenerManager<Elem extends HTMLElement, EventMap extends HTMLElementEventMap> {
-    bind<K extends keyof EventMap>(keys: K[], callback: EventCallback_T): void;
-};
+import type IController from "@/@types/controller";
+import type { AppFTs, FeatureContext } from "@/context/features";
+import { containsKey, executeBoundFunc, nullFunc, type ArgsType, type BoundFunc, type ValueOf } from "@/util/util";
 
-class VideoListenerManager implements IListenerManager<HTMLVideoElement, HTMLVideoElementEventMap> {
+type EventCallback_T = (event: Event) => void;
+class VideoListenerManager {
     private readonly m_element: HTMLVideoElement;
 
     constructor(
@@ -29,20 +29,20 @@ class VideoListenerManager implements IListenerManager<HTMLVideoElement, HTMLVid
     }
 };
 
-interface VideoControllerEventsEmptyData {};
-
-interface VideoControllerEvents {
-    durationchange: (data: VideoControllerEventsEmptyData | { duration: number }) => void;
-    timeupdate: (data: VideoControllerEventsEmptyData | { time: number; position: number; }) => void;
-    play: (_: VideoControllerEventsEmptyData) => void;
-    pause: (_: VideoControllerEventsEmptyData) => void;
+interface VideoControllerDurationChangeEventData {
+    duration: number;
+};
+interface VideoControllerTimeUpdateEventData {
+    time: number;
+    position: number;
 };
 
-function itsIncludes<T extends {}>(obj: string | number | symbol, container: T): obj is (keyof T) {
-    return obj in container;
-}
-
-const nullFunc = () => {};
+interface VideoControllerEvents {
+    durationchange: (data: VideoControllerDurationChangeEventData) => void;
+    timeupdate: (data: VideoControllerTimeUpdateEventData) => void;
+    play: () => void;
+    pause: () => void;
+};
 
 type VideoPlaying = {
     state: "playing";
@@ -59,6 +59,9 @@ export type VideoState = VideoPlaying | VideoPausing | VideoInvalid;
 export class VideoController {
     private m_video: HTMLVideoElement | null = null;
     private m_manager: VideoListenerManager | null = null;
+    private readonly m_ftCtx: FeatureContext;
+    private m_ft: AppFTs | null = null;
+    private m_ft_ctrl: IController | null = null;
 
     private static readonly ListeningEvents: (keyof HTMLVideoElementEventMap)[] = [
         "durationchange",
@@ -74,16 +77,23 @@ export class VideoController {
         pause: nullFunc
     };
 
+    constructor(ftCtx: FeatureContext) {
+        this.m_ftCtx = ftCtx;
+    }
+
     public setVideo(video: HTMLVideoElement): void {
         this.unsetVideo();
         this.m_video = video;
         this.m_manager = new VideoListenerManager(video, VideoController.ListeningEvents, this.m_videoHandler);
+        this.m_ft = this.m_ftCtx.getValue();
+        this.m_ft_ctrl = this.m_ft.controllerRequired ? new this.m_ft.controller() : null;
         this.invokeInit();
     }
 
     public unsetVideo(): void {
         this.m_manager?.unbind(VideoController.ListeningEvents, this.m_videoHandler);
         this.m_video = null;
+        this.m_ft = null;
     }
 
     public setCallback<K extends keyof VideoControllerEvents>(type: K, callback: VideoControllerEvents[K]): void {
@@ -99,21 +109,25 @@ export class VideoController {
     }
 
     private m_videoHandler = (event: { readonly type: string }) => {
-        if (!this.m_video || !itsIncludes(event.type, this.m_callbacks)) return;
+        if (!this.m_video || !containsKey(event.type, this.m_callbacks)) return;
 
-        let args = {};
+        let bound: BoundFunc<ArgsType<ValueOf<typeof this.m_callbacks, typeof event.type>>, void> = {
+            func: this.m_callbacks[event.type],
+            args: []
+        };
+
         switch (event.type) {
             case "durationchange": {
-                args = { duration: this.m_video.duration };
+                bound.args[0] = { duration: this.m_video.duration };
                 break;
             }
             case "timeupdate": {
-                args = { time: this.m_video.currentTime, position: this.m_video.currentTime / this.m_video.duration };
+                bound.args[0] = { time: this.m_video.currentTime, position: this.m_video.currentTime / this.m_video.duration };
                 break;
             }
         }
         
-        this.m_callbacks[event.type](args);
+        executeBoundFunc(bound);
     };
 
     public togglePlaying(): VideoState {
@@ -132,8 +146,12 @@ export class VideoController {
         return state;
     }
 
-    public setVideoPosition(pos: number): void {
+    public setVideoCurrent(sec: number) {
         if (!this.m_video) return;
-        this.m_video.currentTime = pos * this.m_video.duration;   
+        if (this.m_ft_ctrl && "setCur" in this.m_ft_ctrl) {
+            this.m_ft_ctrl.setCur(sec);
+            return;
+        }
+        this.m_video.currentTime = sec;
     }
 };

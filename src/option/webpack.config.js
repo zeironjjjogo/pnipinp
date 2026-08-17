@@ -14,7 +14,7 @@ const config = {
     resolve: {
         extensions: [".ts", ".js"],
         alias: {
-            "@": __dirname,
+            "~": __dirname,
             ":=": path.resolve(__dirname, "../define")
         }
     },
