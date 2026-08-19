@@ -147,3 +147,5 @@ dst/
 tmp/
 .vscode/
 .ignore/
+output/
+build/

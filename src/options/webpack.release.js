@@ -5,23 +5,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = {
     mode: "production",
-    entry: "./option.ts",
+    entry: "./options.ts",
     output: {
-        path: path.resolve(__dirname, "../../dst"),
-        filename: "option.js"
+        path: path.resolve(__dirname, "../../output"),
+        filename: "options.js"
     },
     resolve: {
         extensions: [".ts", ".js"],
         alias: {
             "~": __dirname,
-            ":=": path.resolve(__dirname, "../define")
+            ":=": path.resolve(__dirname, "../def")
         }
     },
     module: {
         rules: [
             {
                 test: /\.ts$/,
-                use: "ts-loader",
+                use: [
+                    {
+                        loader: "ts-loader",
+                        options: {
+                            configFile: "tsconfig.release.json"
+                        }
+                    }
+                ],
                 exclude: /node_modules/
             }
         ]

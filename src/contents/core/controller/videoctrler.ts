@@ -1,5 +1,5 @@
 import type IController from "@/@types/controller";
-import type { AppFTs, FeatureContext } from "@/context/features";
+import type { AppFTs, FeatureContext } from "@/ctx/features";
 import { containsKey, executeBoundFunc, nullFunc, type ArgsType, type BoundFunc, type ValueOf } from "@/util/util";
 
 type EventCallback_T = (event: Event) => void;

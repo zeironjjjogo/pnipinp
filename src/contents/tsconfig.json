@@ -3,11 +3,11 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "../",
-    "outDir": "../../tmp/option",
+    "outDir": "../../output/",
 
     "paths": {
-      "~/*": ["./*"],
-      ":=/*": ["../define/*"]
+      "@/*": ["./*"],
+      ":=/*": ["../def/*"]
     },
 
     // Environment Settings

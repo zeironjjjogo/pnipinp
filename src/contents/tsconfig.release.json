@@ -3,11 +3,11 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "../",
-    "outDir": "../../tmp/content/",
+    "outDir": "../../output/",
 
     "paths": {
       "@/*": ["./*"],
-      ":=/*": ["../define/*"]
+      ":=/*": ["../def/*"]
     },
 
     // Environment Settings
@@ -22,8 +22,8 @@
 
     // Other Outputs
     "sourceMap": false,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
 
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,

@@ -1,4 +1,4 @@
-import { ConfigHolder } from "@/context/config";
+import { ConfigHolder } from "@/ctx/config";
 import type { VideoController } from "@/core/controller/videoctrler";
 
 class AButton {

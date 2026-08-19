@@ -1,5 +1,5 @@
-import { OptionKeys, type OptionKeys_T, type OptionConfigs_T } from ":=/options";
-import { Factor } from "~/optioni18n";
+import { OptionKeys, type OptionKeys_T, type OptionConfigs_T } from ":=/def";
+import { OptionsHTMLFactory } from "~/factory";
 
 type ElemsObj = {
     [k in OptionKeys_T]: HTMLInputElement | null;
@@ -14,7 +14,7 @@ function getElements(): ElemsObj {
 }
 
 (async () => {
-    const opti18n = new Factor();
+    const opti18n = new OptionsHTMLFactory();
     const elems = getElements();
     const configs = await chrome.storage.sync.get<OptionConfigs_T>([...OptionKeys]);
 

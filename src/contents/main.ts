@@ -1,9 +1,9 @@
 import styles from "@/style/main.scss";
 
 import { DOMCtrler } from "@/core/domctrler";
-import { FeatureContext } from "@/context/features";
-import { ConfigHolder } from "@/context/config";
-import { URLObserver } from "@/observer/observer";
+import { FeatureContext } from "@/ctx/features";
+import { ConfigHolder } from "@/ctx/config";
+import { URLObserver } from "@/obs/observer";
 import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from "@/util/util";
 
 (async () => {

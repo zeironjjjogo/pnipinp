@@ -1,4 +1,4 @@
-import { OptionKeys, type OptionConfigs_T } from ":=/options";
+import { OptionKeys, type OptionConfigs_T } from ":=/def";
 
 export class ConfigHolder_T {
     private m_config: OptionConfigs_T | null = null;

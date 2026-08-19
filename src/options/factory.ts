@@ -1,16 +1,16 @@
-import { OptionKeys, type OptionKeys_T } from ":=/options";
+import { OptionKeys, type OptionKeys_T } from ":=/def";
 
-type OptElems_T = [HTMLDivElement, HTMLLabelElement, HTMLInputElement];
-type OptElemsContainer = {
-    [k in OptionKeys_T]: OptElems_T;
+type OptComps = [HTMLDivElement, HTMLLabelElement, HTMLInputElement];
+type OptCompsContainer = {
+    [k in OptionKeys_T]: OptComps;
 };
 
-export class Factor {
-    private readonly m_optElems: OptElemsContainer;
+export class OptionsHTMLFactory {
+    private readonly m_optElems: OptCompsContainer;
 
     private readonly m_submitBtn: HTMLAnchorElement;
 
-    private static createComponent(): OptElems_T {
+    private static createComponent(): OptComps {
         return [
             document.createElement("div"),
             document.createElement("label"),
@@ -38,13 +38,13 @@ export class Factor {
     }
 
     constructor() {
-        const [parent, submitBtn] = Factor.initHTML();
+        const [parent, submitBtn] = OptionsHTMLFactory.initHTML();
         this.m_submitBtn = submitBtn;
 
-        const optElems: Partial<OptElemsContainer> = {};
+        const optElems: Partial<OptCompsContainer> = {};
         
         for (const key of OptionKeys) {
-            const elems = Factor.createComponent();
+            const elems = OptionsHTMLFactory.createComponent();
 
             for (const i of [1, 2] as const) {
                 elems[0].appendChild(elems[i]);
@@ -62,10 +62,10 @@ export class Factor {
             parent.appendChild(elems[0]);
             optElems[key] = elems;
         }
-        this.m_optElems = optElems as OptElemsContainer;
+        this.m_optElems = optElems as OptCompsContainer;
     }
 
-    get elems(): OptElemsContainer {
+    get elems(): OptCompsContainer {
         return this.m_optElems;
     }
 

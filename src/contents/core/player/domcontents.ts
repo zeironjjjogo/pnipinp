@@ -1,4 +1,4 @@
-import { FeatureContext } from "@/context/features";
+import { FeatureContext } from "@/ctx/features";
 import { Resizer } from "@/core/player/resizer";
 import { WrappedCanvas, WrappedVideo } from "@/core/player/wrapped";
 

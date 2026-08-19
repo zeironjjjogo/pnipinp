@@ -1,5 +1,5 @@
 import type { HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
-import { NicovideoSeeker } from "@/context/nicovideoseek";
+import { NicovideoSeeker } from "@/ctx/nicovideoseek";
 
 type NicoVideoFT = {
     readonly type: "nicovideo";

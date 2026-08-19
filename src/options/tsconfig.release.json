@@ -3,11 +3,11 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "../",
-    "outDir": "../../tmp/content/",
+    "outDir": "../../output/",
 
     "paths": {
-      "@/*": ["./*"],
-      ":=/*": ["../define/*"]
+      "~/*": ["./*"],
+      ":=/*": ["../def/*"]
     },
 
     // Environment Settings
@@ -21,9 +21,9 @@
     // and npm install -D @types/node
 
     // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
 
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,

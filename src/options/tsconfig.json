@@ -3,11 +3,11 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "../",
-    "outDir": "../../tmp/option",
+    "outDir": "../../output/",
 
     "paths": {
       "~/*": ["./*"],
-      ":=/*": ["../define/*"]
+      ":=/*": ["../def/*"]
     },
 
     // Environment Settings
@@ -21,7 +21,7 @@
     // and npm install -D @types/node
 
     // Other Outputs
-    "sourceMap": false,
+    "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
 

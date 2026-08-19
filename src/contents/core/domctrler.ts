@@ -1,8 +1,8 @@
 import { Controller } from "@/core/controller/controller";
 import { VideoController } from "@/core/controller/videoctrler";
 import { DOMContents } from "@/core/player/domcontents";
-import type { FeatureContext } from "@/context/features";
-import { ConfigHolder } from "@/context/config";
+import type { FeatureContext } from "@/ctx/features";
+import { ConfigHolder } from "@/ctx/config";
 
 export class DOMCtrler {
     private readonly m_contents: DOMContents;

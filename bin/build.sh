@@ -1,85 +1,65 @@
 #!/bin/bash
-if [ $# -eq 1 ] && [ "$1" == "release" ]; then
-    echo "Version unspecified. bulid.sh release [version]";
-    exit 4;
-elif [ $# -ge 2 ] && [ "$1" == "release" ]; then
-    BUILD_MODE="production";
-    VERSION="v$2";
-else
-    BUILD_MODE="development";
-    VERSION="unknown";
-fi
-
-function build()
-{
-    pushd "./src/$1" || exit 2;
-    print_this "Start build $1";
-    if [ "$2" == "production" ]; then
-        webpack --config "./webpack.release.js";
-    else 
-        webpack;
-    fi
-    popd || exit 3;
-}
-
 THIS="$(basename "$0")";
-function print_this() {
-    echo "[$THIS] $1";
+ROOT="$(realpath "$(dirname "$0")/..")";
+
+APPNAME="pnipinp";
+
+ASSETS_DIR="assets";
+OUTPUT_DIR="output";
+BUILD_DIR="build";
+
+ASSETS_PATH="$ROOT/$ASSETS_DIR";
+OUTPUT_PATH="$ROOT/$OUTPUT_DIR";
+BUILD_PATH="$ROOT/$BUILD_DIR/$APPNAME";
+
+function log() {
+    echo "[$THIS]: $*";
 }
-
-ROOT_DIR="$(pwd)";
-print_this "ROOT_DIR: $ROOT_DIR";
-print_this "BUILD_MODE: $BUILD_MODE";
-[ "$VERSION" ] && print_this "VERSION: $VERSION";
-
-cd "$ROOT_DIR" || exit 1;
-build content "$BUILD_MODE";
-build option "$BUILD_MODE";
-
-if [ "$BUILD_MODE" == "production" ]; then
-    print_this "Build as release";
-else
-    exit 0;
+function build() {
+    pushd "./src/$1" || exit 16;
+    webpack;
+    RET_VAL=$?;
+    popd || exit 17;
+    return $RET_VAL;
+}
+function initDir() {
+    if [ -d "$1" ]; then
+        log "Clean $1.";
+        rm -rv "$1";
+    fi
+    mkdir -pv "$1";
+}
+if [ ! -e "$ASSETS_PATH" ]; then
+    log "ERROR: $ASSETS_PATH is not found.";
+    exit 3;
 fi
 
-TMP_DIR="$ROOT_DIR/tmp_release";
-TMP_OUTPUT_DIR="$TMP_DIR/$VERSION";
-print_this "TMP_OUTPUT_DIR: $TMP_OUTPUT_DIR";
+cd "$ROOT" || exit 8;
 
-RELEASE_DIR="$ROOT_DIR/release";
-DST_OUTPUT_DIR="$RELEASE_DIR/$VERSION";
-print_this "DST_OUTPUT_DIR: $DST_OUTPUT_DIR";
+initDir "$OUTPUT_PATH";
 
-DST_FILE_NAME_STEM="pnipinp-$VERSION";
-print_this "DST_FILE_NAME_STEM: $DST_FILE_NAME_STEM";
-
-if [ ! -e "$TMP_DIR" ]; then
-    print_this "一時フォルダが見つからなかったので$TMP_DIRを作成します";
-    mkdir "$TMP_DIR";
+log "Start transpiling contents.";
+if ! build "contents"; then 
+    log "Failed transpiling contents.";
+else 
+    log "Successed transpiling contents.";
 fi
 
-if [ ! -e "$RELEASE_DIR" ]; then
-    print_this "出力フォルダが見つからなかったので$RELEASE_DIRを作成します";
-    mkdir "$RELEASE_DIR";
+log "Start transpiling options.";
+if ! build "options"; then 
+    log "Failed transpiling options.";
+else 
+    log "Successed transpiling options.";
 fi
 
-mkdir "$DST_OUTPUT_DIR";
-mkdir "$TMP_OUTPUT_DIR";
-mkdir "$TMP_OUTPUT_DIR/dst";
-cp "./readme.txt" "$TMP_OUTPUT_DIR";
-cp "./dst/main.js" "$TMP_OUTPUT_DIR/dst";
-cp "./dst/option.js" "$TMP_OUTPUT_DIR/dst";
-cp "./background.js" "$TMP_OUTPUT_DIR";
-cp "./option.html" "$TMP_OUTPUT_DIR";
-cp "./manifest.json" "$TMP_OUTPUT_DIR";
-cp -r "./_locales" "$TMP_OUTPUT_DIR";
-cd "$TMP_DIR" || exit 5;
+if [ ! -e "$OUTPUT_PATH" ]; then
+    log "ERROR: $OUTPUT_PATH is not found.";
+    exit 4;
+fi
 
-print_this "$DST_OUTPUT_DIR/$DST_FILE_NAME_STEM.tar.gz && ./$VERSION";
+initDir "$BUILD_PATH";
+cp -rv "$ASSETS_PATH"/* "$BUILD_PATH";
+cp -rv "$OUTPUT_PATH"/* "$BUILD_PATH";
 
-tar -zcvf "$DST_OUTPUT_DIR/$DST_FILE_NAME_STEM.tar.gz" "./$VERSION";
-zip -r "$DST_OUTPUT_DIR/$DST_FILE_NAME_STEM.zip" "./$VERSION";
-
-print_this "Finished build successfly";
-
+log "Finished build.";
 exit 0;

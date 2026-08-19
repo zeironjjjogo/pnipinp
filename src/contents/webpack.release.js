@@ -7,14 +7,14 @@ const config = {
     mode: "production",
     entry: "./main.ts",
     output: {
-        path: path.resolve(__dirname, "../../dst"),
+        path: path.resolve(__dirname, "../../output"),
         filename: "main.js"
     },
     resolve: {
         extensions: [".ts", ".js"],
         alias: {
             "@": __dirname,
-            ":=": path.resolve(__dirname, "../define")
+            ":=": path.resolve(__dirname, "../def")
         }
     },
     module: {
@@ -43,7 +43,10 @@ const config = {
                         }
                     },
                     {
-                        loader: "css-loader"
+                        loader: "css-loader",
+                        options: {
+                            sourceMap: false
+                        }
                     },
                     {
                         loader: "sass-loader"
