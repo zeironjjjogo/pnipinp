@@ -83,3 +83,32 @@ export function executeBoundFunc<ArgsT extends any[], ReturnT>(bf: BoundFunc<Arg
 }
 
 export const nullFunc = () => {};
+
+type EventCallback_T = (event: Event) => void;
+
+export class VideoListenerManager {
+    private readonly m_element: HTMLVideoElement;
+
+    constructor(
+        element: HTMLVideoElement,
+        types: readonly (keyof HTMLVideoElementEventMap)[] | null = null,
+        callback: EventCallback_T | null = null
+    ) {
+        this.m_element = element;
+        if (types && callback) {
+            this.bind(types, callback);
+        }
+    }
+
+    public bind(types: readonly (keyof HTMLVideoElementEventMap)[], callback: EventCallback_T): void {
+        for (const type of types) {
+            this.m_element.addEventListener(type, callback);
+        }
+    }
+    public unbind(types: readonly (keyof HTMLVideoElementEventMap)[], callback: EventCallback_T): void {
+        for (const type of types) {
+            this.m_element.removeEventListener(type, callback);
+        }
+    }
+};
+export type DefaultConstructor<T> = new () => T;

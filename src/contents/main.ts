@@ -67,6 +67,7 @@ import { AttrsCollection, doesSupportDocumentPiP, type HandlerArgsContext } from
             urlObs.stop();
             domCtrl.dispose();
             window.focus();
+            console.log("Closed pip.");
         });
 
         const message_youtube = chrome.i18n.getMessage("alertYoutube");

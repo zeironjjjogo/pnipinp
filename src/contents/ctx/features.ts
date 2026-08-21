@@ -1,5 +1,5 @@
-import type { HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
-import { NicovideoSeeker } from "@/ctx/nicovideoseek";
+import type { DefaultConstructor, HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
+import { NicovideoSeeker, NicovideoShortsSeeker } from "@/ctx/nicovideoseeker";
 
 type NicoVideoFT = {
     readonly type: "nicovideo";
@@ -16,8 +16,8 @@ type NicoVideoFT = {
         onChildListModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onURLModified(kwargs: HandlerArgsContextBasis): unknown;
     }
-    readonly controllerRequired: true;
-    readonly controller: new () => NicovideoSeeker;
+    readonly controllerType: "seeker";
+    readonly controller: DefaultConstructor<NicovideoSeeker>;
 };
 const NicoVideoFT = {
     make(): NicoVideoFT {
@@ -62,7 +62,7 @@ const NicoVideoFT = {
                     releaseElements();
                 }
             },
-            controllerRequired: true,
+            controllerType: "seeker",
             controller: NicovideoSeeker
         } as const;
     }
@@ -82,7 +82,8 @@ type NicoVideoShortsFT = {
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onChildListModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
     }
-    readonly controllerRequired: false;
+    readonly controllerType: "seeker";
+    readonly controller: DefaultConstructor<NicovideoShortsSeeker>;
 };
 const NicoVideoShortsFT = {
     make(): NicoVideoShortsFT {
@@ -128,12 +129,13 @@ const NicoVideoShortsFT = {
                         console.log("parent added");
                         if (!loadElements()) {
                             releaseElements();
-                            console.log("Faild to loadElements on ChildListModified at nicovideo-shorts.");
+                            console.log("Faild to loadElements on ChildListModified at nicovideo-shorts.", node);
                         }
                     }
                 }
             },
-            controllerRequired: false
+            controllerType: "seeker",
+            controller: NicovideoShortsSeeker
         } as const;
     }
 };
@@ -150,7 +152,7 @@ type LiveNicoVideoFT = {
         readonly type: "nicovideo:live";
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
     }
-    readonly controllerRequired: false;
+    readonly controllerType: "none";
 };
 type YoutubeFT = {
     readonly type: "youtube";
@@ -162,8 +164,10 @@ type YoutubeFT = {
     readonly behaviours: {
         readonly type: "youtube";
         onMetaDataLoaded(resize: () => unknown): unknown;
+        onResize(resize: () => unknown, reloadAttrs: () => unknown): unknown;
     }
     readonly controllerRequired: false;
+    readonly controllerType: "none";
 };
 type YoutubeShortsFT = {
     readonly type: "youtube:shorts";
@@ -177,6 +181,7 @@ type YoutubeShortsFT = {
         onMetaDataLoaded(resize: () => unknown): unknown;
     }
     readonly controllerRequired: false;
+    readonly controllerType: "none";
 };
 type DefaultsFT = {
     readonly type: "other";
@@ -189,6 +194,7 @@ type DefaultsFT = {
         readonly type: "other";
     }
     readonly controllerRequired: false;
+    readonly controllerType: "none";
 };
 export type AppFTs = NicoVideoFT | NicoVideoShortsFT | LiveNicoVideoFT | YoutubeFT | YoutubeShortsFT | DefaultsFT;
 
@@ -216,7 +222,7 @@ export class FeatureContext implements IContext<AppFTs> {
                 }
             }
         },
-        controllerRequired: false
+        controllerType: "none"
     } as const;
     private static readonly Youtube_FT: YoutubeFT = {
         type: "youtube",
@@ -230,9 +236,15 @@ export class FeatureContext implements IContext<AppFTs> {
             onMetaDataLoaded(resize) {
                 console.log("loadstart");
                 resize();
+            },
+            onResize(resize, reloadAttrs) {
+                console.log("onResize");
+                reloadAttrs();
+                resize();
             }
         },
-        controllerRequired: false
+        controllerRequired: false,
+        controllerType: "none"
     } as const;
     private static readonly YoutubeShorts_FT: YoutubeShortsFT = {
         type: "youtube:shorts",
@@ -248,7 +260,8 @@ export class FeatureContext implements IContext<AppFTs> {
                 resize();
             }
         },
-        controllerRequired: false
+        controllerRequired: false,
+        controllerType: "none"
     } as const;
     private static readonly Default_FT: DefaultsFT = {
         type: "other",
@@ -260,7 +273,8 @@ export class FeatureContext implements IContext<AppFTs> {
         behaviours: {
             type: "other"
         },
-        controllerRequired: false
+        controllerRequired: false,
+        controllerType: "none"
     } as const;
 
     private m_ft: AppFTs = this.updateValue();

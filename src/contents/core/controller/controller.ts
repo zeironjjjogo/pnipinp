@@ -196,21 +196,6 @@ export class Controller {
         this.m_playButton.element.addEventListener("pointerup", this.onClickPlayPause);
         this.m_progressBar.element.addEventListener("input", this.onSeek);
         this.m_closeButton.element.addEventListener("pointerup", this.onClickClose);
-
-        this.m_videoCtrler.setCallback("durationchange", (data) => {
-            this.m_timeDisplay.updateDuration(data.duration);
-            this.m_progressBar.setRange(data.duration);
-        });
-        this.m_videoCtrler.setCallback("pause", () => {
-            this.m_playButton.setState(true);
-        });
-        this.m_videoCtrler.setCallback("play", () => {
-            this.m_playButton.setState(false);
-        });
-        this.m_videoCtrler.setCallback("timeupdate", (data) => {
-            this.m_timeDisplay.updateTime(data.time);
-            this.m_progressBar.setTime(data.time);
-        });
     }
 
     private onClickPlayPause = () => {
@@ -229,4 +214,18 @@ export class Controller {
     private onSeek = () => {
         this.m_videoCtrler.setVideoCurrent(this.m_progressBar.getTime());
     };
+
+    public setPaused(paused: boolean) {
+        this.m_playButton.setState(paused);
+    }
+
+    public setDuration(duration: number) {
+        this.m_progressBar.setRange(duration);
+        this.m_timeDisplay.updateDuration(duration);
+    }
+
+    public setCurTime(sec: number) {
+        this.m_progressBar.setTime(sec);
+        this.m_timeDisplay.updateTime(sec);
+    }
 };

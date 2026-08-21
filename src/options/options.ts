@@ -1,4 +1,4 @@
-import { OptionKeys, type OptionKeys_T, type OptionConfigs_T } from ":=/def";
+import { OptionKeys, type OptionKeys_T, type OptionConfigs_T, DefaultOptions } from ":=/def";
 import { OptionsHTMLFactory } from "~/factory";
 
 type ElemsObj = {
@@ -16,7 +16,7 @@ function getElements(): ElemsObj {
 (async () => {
     const opti18n = new OptionsHTMLFactory();
     const elems = getElements();
-    const configs = await chrome.storage.sync.get<OptionConfigs_T>([...OptionKeys]);
+    const configs = await chrome.storage.sync.get<OptionConfigs_T>(DefaultOptions);
 
     if (configs.useDarkThema) {
         document.body.classList.add("thema--dark");

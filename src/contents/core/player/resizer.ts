@@ -1,10 +1,10 @@
-import type { WrappedCanvas, WrappedVideo } from "@/core/player/wrapped";
-
 type Size = { width: number, height: number };
 const Size = {
     make(w: number, h: number): Size { return { width: w, height: h };}
 };
 
+// for youtube. at the nicovideo, unexcepted behaviour occured: the video size set to 0; have to fix;
+// way to fix: implements handler in feature.ts and controller under domcontents.ts like videoctrler.ts.
 export class ResizeHandler {
     private readonly m_video: HTMLVideoElement;
     private readonly m_handler: () => unknown;
@@ -71,30 +71,10 @@ export class Resizer {
     private readonly m_region: HTMLDivElement;
 
     private readonly m_player: HTMLDivElement;
-    private readonly m_wv: WrappedVideo;
-    private readonly m_wc: WrappedCanvas;
 
-    private m_resize_handler: ResizeHandler | null = null;
-
-    constructor(region: HTMLDivElement, player: HTMLDivElement, wVideo: WrappedVideo, wCanvas: WrappedCanvas) {
+    constructor(region: HTMLDivElement, player: HTMLDivElement) {
         this.m_region = region;
         this.m_player = player;
-        this.m_wv = wVideo;
-        this.m_wc = wCanvas;
-    }
-
-    public onVideoModified(): void {
-        this.m_wv.reloadAttrs();
-        this.resize();
-    }
-
-    public setVideo() {
-        if (this.m_wv.element)
-            this.m_resize_handler = new ResizeHandler(this.m_wv.element, this.onVideoModified.bind(this));
-    }
-
-    public releaseVideo() {
-        this.m_resize_handler?.releaseVideo();
     }
 
     private static makeInscribed(region: Size, aspect: number): Size {
@@ -105,7 +85,7 @@ export class Resizer {
         }
     }
 
-    public resizelogic(v: HTMLVideoElement, c: HTMLCanvasElement | null) {
+    public resize(v: HTMLVideoElement, c: HTMLCanvasElement | null) {
         const region = this.m_region.getBoundingClientRect();
         const regionSize = Size.make(region.width, region.height);
         
@@ -137,12 +117,5 @@ export class Resizer {
             this.m_player.style.width = videoSize.width + "px";
             this.m_player.style.height = videoSize.height + "px";
         }
-    }
-
-    public resize() {
-        if (!this.m_wv.element) {
-            return;
-        }
-        this.resizelogic(this.m_wv.element, this.m_wc.element);
     }
 };

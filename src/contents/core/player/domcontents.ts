@@ -35,11 +35,13 @@ export class DOMContents {
         this.m_ftCtx = ftCtx;
 
         this.m_containers = { outer: playerOuter, inner: playerInner };
-        this.m_resizer = new Resizer(playerOuter, playerInner, this.m_wVideo, this.m_wCanvas);
+        this.m_resizer = new Resizer(playerOuter, playerInner);
     }
 
-    public requestResize(): void {
-        this.m_resizer.resize();
+    public resize(): void {
+        if (this.m_wVideo.element)
+            this.m_resizer.resize(this.m_wVideo.element, this.m_wCanvas.element);
+        // this.m_resizer.resize();
     }
 
     private m_pullVideo(): boolean {
@@ -50,7 +52,6 @@ export class DOMContents {
         ) return false;
 
         this.m_wVideo.pull();
-        this.m_resizer.setVideo();
 
         return true;
     }
@@ -70,17 +71,16 @@ export class DOMContents {
     public pullContents(): boolean {
         if (!this.m_pullVideo()) return false;
         this.m_pullCanvas();
-        this.m_resizer.resize();
+        this.resize();
         return true;
     }
 
     public pullCanvas(): void {
         this.m_pullCanvas();
-        this.m_resizer.resize();
+        this.resize();
     }
 
     private m_pushVideo(): void {
-        this.m_resizer.releaseVideo();
         this.m_wVideo.push();
     }
 
@@ -91,5 +91,10 @@ export class DOMContents {
     public pushContents(): void {
         this.m_pushVideo();
         this.m_pushCanvas();
+    }
+
+    public fixSize = () => {
+        this.m_wVideo.reloadAttrs();
+        this.resize();
     }
 };

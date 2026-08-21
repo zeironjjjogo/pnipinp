@@ -161,26 +161,16 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
         return "video-content--pnipinp";
     }
 
-    // protected storeAttrs(): AttrWrappedVideo | null {
-    //     return null;
-    // }
-    // protected restoreAttrs(): void {
-        
-    // }
-    // protected beforePull(): boolean {
-    //     return true;
-    // }
-    // protected beforePush(): void {
-        
-    // }
-
     protected storeAttrs(): AttrWrappedVideo | null {
         if (!this.m_elem) return null;
-        return this.m_oldAttrs = {
+        // return this.m_oldAttrs = {
+        this.m_oldAttrs = {
             width: this.m_elem.style.width,
             height: this.m_elem.style.height,
             inset: this.m_elem.style.inset
         };
+        console.log(this.m_oldAttrs);
+        return this.m_oldAttrs;
     }
 
     protected restoreAttrs(): void {

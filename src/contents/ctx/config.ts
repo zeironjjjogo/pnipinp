@@ -1,10 +1,10 @@
-import { OptionKeys, type OptionConfigs_T } from ":=/def";
+import { DefaultOptions, type OptionConfigs_T } from ":=/def";
 
 export class ConfigHolder_T {
     private m_config: OptionConfigs_T | null = null;
 
     public async loadConfigs() {
-        this.m_config = await chrome.storage.sync.get([...OptionKeys]);
+        this.m_config = await chrome.storage.sync.get(DefaultOptions);
     }
 
     public getConfig(): OptionConfigs_T | null {
