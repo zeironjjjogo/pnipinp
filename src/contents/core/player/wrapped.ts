@@ -53,8 +53,7 @@ abstract class ElementWrapper<E extends Element, A extends AttrWrappedElement> i
         if (this.m_elem || this.m_isMoved) {
             this.push();
         }
-        this.m_elem = selector ? document.querySelector(selector) : null;
-        return this.m_elem;
+        return this.m_elem = selector ? document.querySelector(selector) : null;
     }
 
     public pull() {
@@ -163,14 +162,11 @@ export class WrappedVideo extends ElementWrapper<HTMLVideoElement, AttrWrappedVi
 
     protected storeAttrs(): AttrWrappedVideo | null {
         if (!this.m_elem) return null;
-        // return this.m_oldAttrs = {
-        this.m_oldAttrs = {
+        return this.m_oldAttrs = {
             width: this.m_elem.style.width,
             height: this.m_elem.style.height,
             inset: this.m_elem.style.inset
         };
-        console.log(this.m_oldAttrs);
-        return this.m_oldAttrs;
     }
 
     protected restoreAttrs(): void {

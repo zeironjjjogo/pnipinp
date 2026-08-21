@@ -60,7 +60,6 @@ export class VideoController {
         if (!this.m_video) return;
         if (this.m_ft_ctrl && this.m_ft_ctrl.isValid()) {
             this.m_ft_ctrl.setCur(sec);
-            console.log("ft_ctrl");
             return;
         }
         this.m_video.currentTime = sec;
