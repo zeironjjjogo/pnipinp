@@ -1,4 +1,4 @@
-import type IController from "@/@types/controller";
+import type { IController } from "@/util/util";
 import type { AppFTs, FeatureContext } from "@/ctx/features";
 
 type VideoPlaying = {

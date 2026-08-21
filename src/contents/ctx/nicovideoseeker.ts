@@ -1,4 +1,4 @@
-import type IController from "@/@types/controller";
+import type { IController } from "@/util/util";
 
 class SeekbarObs {
     private m_obs: MutationObserver;

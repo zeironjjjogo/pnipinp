@@ -111,4 +111,11 @@ export class VideoListenerManager {
         }
     }
 };
+
 export type DefaultConstructor<T> = new () => T;
+
+export interface IController {
+    setCur(sec: number): unknown;
+    isValid(): boolean;
+    dispose(): void;
+};

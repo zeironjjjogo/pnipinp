@@ -197,6 +197,8 @@ type DefaultsFT = {
     readonly controllerType: "none";
 };
 export type AppFTs = NicoVideoFT | NicoVideoShortsFT | LiveNicoVideoFT | YoutubeFT | YoutubeShortsFT | DefaultsFT;
+export type EnabledAppFts = NicoVideoFT | NicoVideoShortsFT | LiveNicoVideoFT;
+export type EnabledApps = EnabledAppFts["type"];
 
 export class FeatureContext implements IContext<AppFTs> {
     private static readonly NicoVideo_FT: NicoVideoFT = NicoVideoFT.make();
@@ -278,23 +280,6 @@ export class FeatureContext implements IContext<AppFTs> {
     } as const;
 
     private m_ft: AppFTs = this.updateValue();
-
-    public _updateValue() {
-        const url = document.URL;
-        if (url.includes("https://www.nicovideo.jp/watch/"))
-            this.m_ft = FeatureContext.NicoVideo_FT;
-        else if (url.includes("https://www.nicovideo.jp/shorts/"))
-            this.m_ft = FeatureContext.NicoVideoShorts_FT;
-        else if (url.includes("https://live.nicovideo.jp/"))
-            this.m_ft = FeatureContext.LiveNicoVideo_FT;
-        else if (url.includes("https://www.youtube.com/watch/"))
-            this.m_ft = FeatureContext.Youtube_FT;
-        else if (url.includes("https://www.youtube.com/shorts/"))
-            this.m_ft = FeatureContext.YoutubeShorts_FT;
-        else
-            this.m_ft = FeatureContext.Default_FT;
-        return this.m_ft;
-    }
 
     public updateValue() {
         const { hostname, pathname } = location;

@@ -6,7 +6,10 @@
         "message": "Launch the Picture in Picture window."
     },
     "alertYoutube": {
-        "message": "This extension can display the video on PiP but can be interrupted video playing."
+        "message": "PniPinP is unavailable on Youtube."
+    },
+    "alertOther": {
+        "message": "This site is unsupported. unexcepted behaviour may occur."
     },
     "optionTitle": {
         "message": "PniPinP-Options"  

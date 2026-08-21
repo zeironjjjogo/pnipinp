@@ -6,10 +6,13 @@
         "message": "ピクチャーインピクチャー(PniPinP)を起動。"
     },
     "alertYoutube": {
-        "message": "この拡張機能によってYoutubeの再生中にエラーが発生する可能性が高いです。"
+        "message": "Youtubeでは利用できません。"
+    },
+    "alertOther": {
+        "message": "サポート外のサイトです。予期せぬ動作が発生する可能性があります。"
     },
     "optionTitle": {
-        "message": "PniPinP-設定"  
+        "message": "PniPinP-設定"
     },
     "optionH1": {
         "message": "オプション"
