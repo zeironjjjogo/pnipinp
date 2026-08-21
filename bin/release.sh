@@ -1,7 +1,8 @@
 #!/bin/bash
 THIS="$(basename "$0")";
 ROOT="$(realpath "$(dirname "$0")/..")";
-VERSION="v$1";
+VERSION_STEM="$1";
+VERSION="v$VERSION_STEM";
 
 APPNAME="pnipinp";
 STEM="$APPNAME-$VERSION";
@@ -38,7 +39,7 @@ function initDir() {
 function editManifest() {
     TGT_JSON="$BUILD_PATH/manifest.json";
     TMP_JSON="$BUILD_PATH/edited.json";
-    if ! < "$TGT_JSON" jq ".version|=\"$VERSION\" | del(.web_accessible_resources)" > "$TMP_JSON"; then
+    if ! < "$TGT_JSON" jq ".version|=\"$VERSION_STEM\" | del(.web_accessible_resources)" > "$TMP_JSON"; then
         log "Failed to edit manifest.";
         return;
     fi
