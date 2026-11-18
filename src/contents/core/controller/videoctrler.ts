@@ -19,8 +19,17 @@ export class VideoController {
     private m_ft: AppFTs | null = null;
     private m_addCtrl: IAdditionalController | null = null;
 
+    private m_stopOnDispose: boolean = true;
+
     constructor(ftCtx: FeatureContext) {
         this.m_ftCtx = ftCtx;
+    }
+
+    public requestStopOnNextUnset(stop: boolean): void {
+        this.m_stopOnDispose = stop;
+        setTimeout(() => {
+            this.m_stopOnDispose = true;
+        }, 500);
     }
 
     public setVideo(video: HTMLVideoElement): void {
@@ -34,8 +43,13 @@ export class VideoController {
         }
     }
 
-    public unsetVideo(stop: boolean = false): void {
-        if (stop) { this.m_video?.pause(); }
+    public unsetVideo(): void {
+        if (this.m_stopOnDispose) {
+            this.m_video?.pause();
+        } else {
+            this.m_stopOnDispose = true;
+        }
+
         this.m_video = null;
         this.m_ft = null;
         this.m_addCtrl?.dispose();

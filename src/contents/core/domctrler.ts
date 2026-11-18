@@ -6,7 +6,7 @@ import { ConfigHolder } from "@/ctx/config";
 import { VideoHandler } from "@/core/videohandler";
 import { nicovideoSkipButtonSelectors } from "@/util/util";
 
-import sampleImg from "@/core/sample.png";
+// import sampleImg from "@/core/sample.png";
 
 export class DOMCtrler {
     private readonly m_contents: DOMContents;
@@ -81,7 +81,7 @@ export class DOMCtrler {
                     console.log(sw, sh);
                     const w = sw * 6 + (sw >>> 1), h = sh * 7 + (sh >>> 1);
                     const img = document.createElement("img");
-                    img.src = sampleImg;
+                    // img.src = sampleImg;
                     img.style.left = rect.left + w + "px";
                     img.style.top = rect.top + h + "px";
                     img.style.width = "100%";
@@ -162,7 +162,7 @@ export class DOMCtrler {
 
     public releaseContents(): void {
         this.m_videoHandler.unsetVideo();
-        this.m_videoController.unsetVideo(true);
+        this.m_videoController.unsetVideo();
         this.m_contents.pushContents();
     }
 

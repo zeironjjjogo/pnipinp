@@ -20,17 +20,14 @@ const main = async () => {
             return;
         }
 
-        chrome.runtime.sendMessage({ action: "beforeCreatePiP" });
-
-        const pipWin = window.documentPictureInPicture.window || await window.documentPictureInPicture.requestWindow();
+        const pipWin = window.documentPictureInPicture.window || await window.documentPictureInPicture.requestWindow({ disallowReturnToOpener: true });
         const pipDoc = pipWin.document;
+        chrome.runtime.sendMessage({ action: "createdPiP" });
 
         if (pipDoc.body.hasChildNodes()) {
             console.log("Already initialized.");
             return;
         }
-
-        chrome.runtime.sendMessage({ action: "createPiP" });
 
         styles.use();                       // Adopts stylesheets.
         await ConfigHolder.loadConfigs();   // Loads configures.
@@ -86,7 +83,6 @@ const main = async () => {
             domCtrl.dispose();
             styles.unuse();
             IsInitialized = false;
-            window.focus();
             console.log("Closed pip.");
         };
 
