@@ -1,5 +1,23 @@
-import type { DefaultConstructor, HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
+import type { DefaultConstructor, FeatureHandlersArgs, HandlerArgsContext, HandlerArgsContextBasis, IContext } from "@/util/util";
 import { NicovideoSeeker, NicovideoShortsSeeker } from "@/ctx/nicovideoseeker";
+
+class NicoVideoHandlingFunctions {
+    public static onModifyChildList(isParent: (elem: Element) => boolean, record: MutationRecord, { controller }: FeatureHandlersArgs) {
+        for (const node of record.addedNodes) {
+            if (!(node instanceof HTMLDivElement) || !isParent(node)) continue;
+            if (!controller.updateContents()) {
+                controller.releaseContents();
+            }
+        }
+    }
+    public static checkCanvasInitialized(record: MutationRecord, collection: FeatureHandlersArgs["collection"], controller: FeatureHandlersArgs["controller"]) {
+        if (record.attributeName) collection.append(record.attributeName);
+        if (collection.includes("width") && collection.includes("height")) {
+            collection.clear();
+            controller.updateCanvas();
+        }
+    }
+};
 
 type NicoVideoFT = {
     readonly type: "nicovideo";
@@ -12,6 +30,9 @@ type NicoVideoFT = {
     }
     readonly behaviours: {
         readonly type: "nicovideo";
+        onAttributeChange(record: MutationRecord, kwargs: FeatureHandlersArgs): unknown;
+        onChildListChange(record: MutationRecord, kwargs: FeatureHandlersArgs): unknown;
+        onURLChange(kwargs: FeatureHandlersArgs): unknown;
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onChildListModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onURLModified(kwargs: HandlerArgsContextBasis): unknown;
@@ -37,7 +58,18 @@ const NicoVideoFT = {
             selectors : selectors,
             behaviours: {
                 type: "nicovideo",
-                onAttributeModified(record, { collection, loadCanvas, getCanvas }) {
+                onAttributeChange(record, { collection, controller }) {
+                    if (record.target === controller.getCanvas()) {
+                        NicoVideoHandlingFunctions.checkCanvasInitialized(record, collection, controller);
+                    }                    
+                },
+                onChildListChange(record, kwargs) {
+                    NicoVideoHandlingFunctions.onModifyChildList((elem) => elem.matches(selectors.parent), record, kwargs);
+                },
+                onURLChange({ controller }) {
+                    controller.releaseContents();
+                },
+                onAttributeModified(record, { collection, updateCanvas: loadCanvas, getCanvas }) {
                     if (record.target !== getCanvas()) return;
 
                     if (record.attributeName) collection.append(record.attributeName);
@@ -48,7 +80,7 @@ const NicoVideoFT = {
                         loadCanvas();
                     }
                 },
-                onChildListModified(record, { loadElements, releaseElements }) {
+                onChildListModified(record, { updateContents: loadElements, releaseContents: releaseElements }) {
                     for (const node of record.addedNodes) {
                         if (!(node instanceof HTMLDivElement) || !node.matches(selectors.parent)) continue;
                         console.log("parent added");
@@ -58,7 +90,7 @@ const NicoVideoFT = {
                         }
                     }
                 },
-                onURLModified({ releaseElements }) {
+                onURLModified({ releaseContents: releaseElements }) {
                     releaseElements();
                 }
             },
@@ -79,8 +111,11 @@ type NicoVideoShortsFT = {
     }
     readonly behaviours: {
         readonly type: "nicovideo:shorts";
+        onAttributeChange(record: MutationRecord, kwargs: FeatureHandlersArgs): unknown;
+        onChildListChange(record: MutationRecord, kwargs: FeatureHandlersArgs): unknown;
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
         onChildListModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
+        onWheel(event: WheelEvent): unknown;
     }
     readonly controllerType: "seeker";
     readonly controller: DefaultConstructor<NicovideoShortsSeeker>;
@@ -103,7 +138,20 @@ const NicoVideoShortsFT = {
             selectors: selectors,
             behaviours: {
                 type: "nicovideo:shorts",
-                onAttributeModified(record, { collection, loadCanvas, loadElements, releaseElements, getCanvas }) {
+                onAttributeChange(record, { collection, controller }) {
+                    if (!(record.target instanceof HTMLElement)) return;
+                    if (record.target.matches(selectors.parent)) {
+                        if (!controller.updateContents()) {
+                            controller.releaseContents();
+                        }
+                    } else if (record.target === controller.getCanvas()) {
+                        NicoVideoHandlingFunctions.checkCanvasInitialized(record, collection, controller);
+                    }
+                },
+                onChildListChange(record, kwargs) {
+                    NicoVideoHandlingFunctions.onModifyChildList((node) => node.querySelectorAll("div[data-state]").length !== 0, record, kwargs);
+                },
+                onAttributeModified(record, { collection, updateCanvas: loadCanvas, updateContents: loadElements, releaseContents: releaseElements, getCanvas }) {
                     if (!(record.target instanceof HTMLElement)) return;
                     if (record.target.matches(selectors.parent)) {
                         console.log("set to be active");
@@ -123,7 +171,7 @@ const NicoVideoShortsFT = {
                         loadCanvas();
                     }
                 },
-                onChildListModified(record, { loadElements, releaseElements }) {
+                onChildListModified(record, { updateContents: loadElements, releaseContents: releaseElements }) {
                     for (const node of record.addedNodes) {
                         if (!(node instanceof HTMLDivElement) || node.querySelectorAll("div[data-state]").length === 0) continue;
                         console.log("parent added");
@@ -132,6 +180,12 @@ const NicoVideoShortsFT = {
                             console.log("Faild to loadElements on ChildListModified at nicovideo-shorts.", node);
                         }
                     }
+                },
+                onWheel(event) {
+                    if (event.deltaY === 0) return;
+                    const scrollableRegion = document.querySelector("[role=region][aria-describedby=shorts-layout-help]");
+                    if (!scrollableRegion) return;
+                    scrollableRegion.dispatchEvent(new WheelEvent(event.type, event));
                 }
             },
             controllerType: "seeker",
@@ -150,6 +204,7 @@ type LiveNicoVideoFT = {
     }
     readonly behaviours: {
         readonly type: "nicovideo:live";
+        onAttributeChange(record: MutationRecord, kwargs: FeatureHandlersArgs): unknown;
         onAttributeModified(record: MutationRecord, kwargs: HandlerArgsContext): unknown;
     }
     readonly controllerType: "none";
@@ -213,7 +268,12 @@ export class FeatureContext implements IContext<AppFTs> {
         },
         behaviours: {
             type: "nicovideo:live",
-            onAttributeModified(record, { collection, loadCanvas, getCanvas }) {
+            onAttributeChange(record, { collection, controller }) {
+                if (record.target === controller.getCanvas()) {
+                    NicoVideoHandlingFunctions.checkCanvasInitialized(record, collection, controller);
+                }
+            },
+            onAttributeModified(record, { collection, updateCanvas: loadCanvas, getCanvas }) {
                 if (record.target !== getCanvas()) return;
 
                 if (record.attributeName) collection.append(record.attributeName);

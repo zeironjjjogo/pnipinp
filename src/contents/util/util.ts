@@ -9,7 +9,7 @@ export interface DocumentPictureInPicture extends EventTarget {
 };
 
 export type WindowSupportingDocumentPictureInPicture = typeof window & {
-    readonly documentPictureInPicture: DocumentPictureInPicture
+    readonly documentPictureInPicture: DocumentPictureInPicture;
 };
 
 export function doesSupportDocumentPiP(window_: Window): window_ is WindowSupportingDocumentPictureInPicture {
@@ -56,9 +56,9 @@ export interface HandlerArgsContextAppendix {
 };
 export interface HandlerArgsContextBasis {
     collection: Collection<string>;
-    loadCanvas(): unknown;
-    loadElements(): boolean;
-    releaseElements(): unknown;
+    updateCanvas(): unknown;
+    updateContents(): boolean;
+    releaseContents(): unknown;
     resize(): unknown;
     getVideo(): HTMLVideoElement | null;
     getCanvas(): HTMLCanvasElement | null;
@@ -66,7 +66,7 @@ export interface HandlerArgsContextBasis {
 // export type HandlerArgsContext = HandlerArgsContextAppendix & HandlerArgsContextBasis;
 export type HandlerArgsContext = HandlerArgsContextBasis;
 
-export type ValueOf<C extends object, K extends keyof C> = C[K];
+export type ValueOf<C extends object, K extends keyof C = keyof C> = C[K];
 
 export function containsKey<T extends object>(keyObj: string | number | symbol, container: T): keyObj is (keyof T) {
     return keyObj in container;
@@ -84,38 +84,61 @@ export function executeBoundFunc<ArgsT extends any[], ReturnT>(bf: BoundFunc<Arg
 
 export const nullFunc = () => {};
 
-type EventCallback_T = (event: Event) => void;
+export type EventHandler = (event: Event) => void;
+
+export type ConstEventTypesArray = readonly (keyof HTMLVideoElementEventMap)[];
+type SetEventListenerFuncT<Elem extends HTMLElement, Map extends HTMLElementEventMap> = (type: keyof Map, listener: (this: Elem, ev: ValueOf<Map>) => any) => void;
+type SetVideoEventListenerFuncT = SetEventListenerFuncT<HTMLVideoElement, HTMLVideoElementEventMap>;
 
 export class VideoListenerManager {
     private readonly m_element: HTMLVideoElement;
 
     constructor(
         element: HTMLVideoElement,
-        types: readonly (keyof HTMLVideoElementEventMap)[] | null = null,
-        callback: EventCallback_T | null = null
+        types: ConstEventTypesArray | null = null,
+        callback: EventHandler | null = null
     ) {
         this.m_element = element;
         if (types && callback) {
             this.bind(types, callback);
         }
     }
-
-    public bind(types: readonly (keyof HTMLVideoElementEventMap)[], callback: EventCallback_T): void {
+    public bind(types: ConstEventTypesArray, handler: EventHandler): void {
         for (const type of types) {
-            this.m_element.addEventListener(type, callback);
+            this.m_element.addEventListener(type, handler);
         }
     }
-    public unbind(types: readonly (keyof HTMLVideoElementEventMap)[], callback: EventCallback_T): void {
+    public unbind(types: ConstEventTypesArray, handler: EventHandler): void {
         for (const type of types) {
-            this.m_element.removeEventListener(type, callback);
+            this.m_element.removeEventListener(type, handler);
         }
     }
 };
 
 export type DefaultConstructor<T> = new () => T;
 
-export interface IController {
-    setCur(sec: number): unknown;
+export interface IAdditionalController {
+    setCur(sec: number): boolean;
     isValid(): boolean;
     dispose(): void;
 };
+
+export const nicovideoSkipButtonSelectors = [
+    "[id=nv_watch_VideoAdContainer] button",
+    "button[aria-label=\"Skip Ad\"]",
+    "#request_skip"
+];
+
+export interface ApplicationController {
+    getVideo(): HTMLVideoElement | null;
+    getCanvas(): HTMLCanvasElement | null;
+    updateContents(): boolean;
+    updateCanvas(): void;
+    releaseContents(): void;
+    resizeContents(): void;
+}
+// Arguments object to pass handlers for a feature of the service
+export interface FeatureHandlersArgs {
+    collection: Collection<string>;
+    controller: ApplicationController;
+}

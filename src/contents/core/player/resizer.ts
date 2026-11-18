@@ -5,7 +5,6 @@ const Size = {
 
 export class Resizer {
     private readonly m_region: HTMLDivElement;
-
     private readonly m_player: HTMLDivElement;
 
     constructor(region: HTMLDivElement, player: HTMLDivElement) {
@@ -21,9 +20,18 @@ export class Resizer {
         }
     }
 
+    private static setSize(target: HTMLElement, size: Size): void {
+        target.style.width = size.width + "px";
+        target.style.height = size.height + "px";
+    }
+
     public resize(v: HTMLVideoElement, c: HTMLCanvasElement | null) {
         const region = this.m_region.getBoundingClientRect();
         const regionSize = Size.make(region.width, region.height);
+        if (regionSize.width <= 0 || regionSize.height <= 0) {
+            console.log("region size invalid: ", regionSize);
+            return;
+        }
         
         const videoAspect = v.videoWidth / v.videoHeight;
         if (c) {
@@ -36,22 +44,16 @@ export class Resizer {
                 Math.max(canvasSize.height, videoSize.height)
             );
 
-            v.style.width = videoSize.width + "px";
-            v.style.height = videoSize.height + "px";
-            c.style.width = canvasSize.width + "px";
-            c.style.height = canvasSize.height + "px";
-
+            Resizer.setSize(v, videoSize);
+            Resizer.setSize(c, canvasSize);
+            Resizer.setSize(this.m_player, playerSize);
             v.style.inset = `${(playerSize.height - videoSize.height) / 2}px ${(playerSize.width - videoSize.width) / 2}px`;
             c.style.inset = `${(playerSize.height - canvasSize.height) / 2}px ${(playerSize.width - canvasSize.width) / 2}px`;
 
-            this.m_player.style.width = playerSize.width + "px";
-            this.m_player.style.height = playerSize.height + "px";
         } else {
             const videoSize = Resizer.makeInscribed(regionSize, videoAspect);
-            v.style.width = videoSize.width + "px";
-            v.style.height = videoSize.height + "px";
-            this.m_player.style.width = videoSize.width + "px";
-            this.m_player.style.height = videoSize.height + "px";
+            Resizer.setSize(v, videoSize);
+            Resizer.setSize(this.m_player, videoSize);
         }
     }
 };

@@ -1,6 +1,6 @@
-import { containsKey, nullFunc, VideoListenerManager } from "@/util/util";
+import { containsKey, nullFunc, VideoListenerManager, type ConstEventTypesArray } from "@/util/util";
 
-const ListeningEvents = [
+const ListeningTypesList = [
     "durationchange",
     "play",
     "pause",
@@ -10,39 +10,49 @@ const ListeningEvents = [
     "resize"
 ] as const;
 
-type ListenTypes = typeof ListeningEvents[number];
+type ListeningTypes = typeof ListeningTypesList[number];
 
 interface VideoEventData {
     readonly duration: number;
     readonly curTime: number;
-}
-type VideoEventHandler = (data: VideoEventData) => unknown;
-type VideoEventHandlers = { [K in ListenTypes]: VideoEventHandler; };
+};
+type VideoEventHandler = (data: VideoEventData) => void;
+type VideoEventHandlersDict = { [T in ListeningTypes]: VideoEventHandler; };
 
 export class VideoHandler {
     private m_video: HTMLVideoElement | null = null;
     private m_manager: VideoListenerManager | null = null;
 
     private static initEmptyHandlers() {
-        const dst: Partial<VideoEventHandlers> = {};
-        for (const k of ListeningEvents) {
+        const dst: Partial<VideoEventHandlersDict> = {};
+        for (const k of ListeningTypesList) {
             dst[k] = nullFunc;
         }
-        return dst as VideoEventHandlers;
+        return dst as VideoEventHandlersDict;
     }
 
-    private m_handlers: VideoEventHandlers = VideoHandler.initEmptyHandlers();
+    private m_handlers: VideoEventHandlersDict = VideoHandler.initEmptyHandlers();
 
-    private m_dispatch = ({ type }: Event) => {
-        if (this.m_video && containsKey(type, this.m_handlers))
-            this.m_handlers[type]({
-                duration: this.m_video.duration,
-                curTime: this.m_video.currentTime
-            });
+    private m_dispatchEvents = ({ type }: Event) => {
+        if (!this.m_video || !containsKey(type, this.m_handlers)) return;
+        this.invoke(type, {
+            duration: this.m_video.duration,
+            curTime: this.m_video.currentTime
+        });
     };
 
+    private registerHandlers() {
+        for (const type of ListeningTypesList)
+            this.m_video?.addEventListener(type, this.m_dispatchEvents);
+    }
+    private unregisterHandlers() {
+        for (const type of ListeningTypesList)
+            this.m_video?.removeEventListener(type, this.m_dispatchEvents);
+    }
+
     public unsetVideo() {
-        this.m_manager?.unbind(ListeningEvents, this.m_dispatch);
+        // this.m_manager?.unbind(ListeningTypesList, this.m_dispatchEvents);
+        this.unregisterHandlers();
         this.m_video = null;
     }
 
@@ -51,25 +61,27 @@ export class VideoHandler {
             this.unsetVideo();
         }
         this.m_video = video;
-        this.m_manager = new VideoListenerManager(
-            video,
-            ListeningEvents,
-            this.m_dispatch
-        );
+        this.registerHandlers();
+        // this.m_manager = new VideoListenerManager(
+        //     video,
+        //     ListeningTypesList,
+        //     this.m_dispatchEvents
+        // );
         this.initInvoke();
     }
 
-    public setHandler(type: ListenTypes, handler: VideoEventHandler) {
+    public setHandler(type: ListeningTypes, handler: VideoEventHandler) {
         this.m_handlers[type] = handler;
     }
 
-    public unsetHandler(type: ListenTypes) {
+    public unsetHandler(type: ListeningTypes) {
         this.m_handlers[type] = nullFunc;
     }
 
-    public invoke(type: ListenTypes, data: VideoEventData) {
-        return this.m_handlers[type](data);
+    public invoke(type: ListeningTypes, data: VideoEventData) {
+        this.m_handlers[type](data);
     }
+
     private initInvoke() {
         if (!this.m_video) return;
         const data: VideoEventData = {

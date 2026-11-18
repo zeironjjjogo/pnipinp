@@ -1,4 +1,4 @@
-import type { IController } from "@/util/util";
+import type { IAdditionalController } from "@/util/util";
 import type { AppFTs, FeatureContext } from "@/ctx/features";
 
 type VideoPlaying = {
@@ -14,10 +14,10 @@ type VideoInvalid = {
 export type VideoState = VideoPlaying | VideoPausing | VideoInvalid;
 
 export class VideoController {
-    private m_video: HTMLVideoElement | null = null;
     private readonly m_ftCtx: FeatureContext;
+    private m_video: HTMLVideoElement | null = null;
     private m_ft: AppFTs | null = null;
-    private m_ft_ctrl: IController | null = null;
+    private m_addCtrl: IAdditionalController | null = null;
 
     constructor(ftCtx: FeatureContext) {
         this.m_ftCtx = ftCtx;
@@ -28,16 +28,17 @@ export class VideoController {
         this.m_video = video;
         this.m_ft = this.m_ftCtx.getValue();
         try {
-            this.m_ft_ctrl = this.m_ft.controllerType !== "none" ? new this.m_ft.controller() : null;
+            this.m_addCtrl = this.m_ft.controllerType !== "none" ? new this.m_ft.controller() : null;
         } catch (e) {
-            this.m_ft_ctrl = null;
+            this.m_addCtrl = null;
         }
     }
 
-    public unsetVideo(): void {
+    public unsetVideo(stop: boolean = false): void {
+        if (stop) { this.m_video?.pause(); }
         this.m_video = null;
         this.m_ft = null;
-        this.m_ft_ctrl?.dispose();
+        this.m_addCtrl?.dispose();
     }
 
     public togglePlaying(): VideoState {
@@ -56,12 +57,13 @@ export class VideoController {
         return state;
     }
 
-    public setVideoCurrent(sec: number) {
+    public setCurrentPos(sec: number) {
         if (!this.m_video) return;
-        if (this.m_ft_ctrl && this.m_ft_ctrl.isValid()) {
-            this.m_ft_ctrl.setCur(sec);
-            return;
-        }
+        if (
+            this.m_addCtrl &&
+            this.m_addCtrl.isValid() &&
+            this.m_addCtrl.setCur(sec)
+        ) return;
         this.m_video.currentTime = sec;
     }
 };

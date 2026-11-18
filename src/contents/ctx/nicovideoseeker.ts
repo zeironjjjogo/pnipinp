@@ -1,4 +1,4 @@
-import type { IController } from "@/util/util";
+import type { IAdditionalController } from "@/util/util";
 
 class SeekbarObs {
     private m_obs: MutationObserver;
@@ -35,7 +35,7 @@ class SeekbarObs {
     }
 };
 
-export class NicovideoSeeker implements IController {
+export class NicovideoSeeker implements IAdditionalController {
     private static getSeekbar(): HTMLDivElement | null {
         return document.querySelector("div[data-styling-area=floating] div[aria-label=\"video - bufferedTime\"] + div");
     }
@@ -94,21 +94,21 @@ export class NicovideoSeeker implements IController {
         this.m_seekbar.dispatchEvent(event);
     }
 
-    public setCur(sec: number): unknown {
-        if (!this.m_seekbar || !this.isValid()) return;
+    public setCur(sec: number): boolean {
+        if (!this.m_seekbar || !this.isValid()) return false;
         const rect = this.m_seekbar.getBoundingClientRect();
         const props = this.getProps();
-        if (!props) return;
+        if (!props) return false;
         const event = new MouseEvent("click", {
             bubbles: true,
             clientX: rect.left + rect.width * (sec / props.content.range) * props.content.percentage,
             clientY: rect.top + rect.height * 0.5
         });
-        this.m_seekbar.dispatchEvent(event);
+        return this.m_seekbar.dispatchEvent(event);
     }
 };
 
-export class NicovideoShortsSeeker implements IController {
+export class NicovideoShortsSeeker implements IAdditionalController {
     private static getSeekbar() {
         return document.querySelector("[data-playlist-state=active] [aria-label=\"video - currentTime\"]")?.previousElementSibling as HTMLDivElement | null | undefined;
     }
@@ -136,18 +136,18 @@ export class NicovideoShortsSeeker implements IController {
     public dispose(): void {
     }
 
-    public setCur(sec: number) {
-        if (!this.m_seekbar || !this.isValid()) return;
+    public setCur(sec: number): boolean {
+        if (!this.m_seekbar || !this.isValid()) return false;
         const rect = this.m_seekbar.getBoundingClientRect();
 
         const range = this.getRange();
-        if (!range) return;
+        if (!range) return false;
 
         const event = new MouseEvent("click", {
             bubbles: true,
             clientX: rect.left + rect.width * (sec / range),
             clientY: rect.top + rect.height * 0.5
         });
-        this.m_seekbar.dispatchEvent(event);
+        return this.m_seekbar.dispatchEvent(event);
     }
 };

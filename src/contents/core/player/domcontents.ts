@@ -39,9 +39,10 @@ export class DOMContents {
     }
 
     public resize(): void {
-        if (this.m_wVideo.element)
+        if (this.m_wVideo.element) {
             this.m_resizer.resize(this.m_wVideo.element, this.m_wCanvas.element);
-        // this.m_resizer.resize();
+        }
+    // this.m_resizer.resize();
     }
 
     private m_pullVideo(): boolean {

@@ -1,6 +1,8 @@
 export const OptionKeys = [
     "useDarkThema",
-    "clickToPlay"
+    "clickToPlay",
+    "unshowThumbnail",
+    "launchAutomatically"
 ] as const;
 
 export type OptionKeys_T = typeof OptionKeys[number];

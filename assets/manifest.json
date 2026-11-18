@@ -16,6 +16,10 @@
         {
             "resources": ["*.map"],
             "matches": ["<all_urls>"]
+        },
+        {
+            "resources": ["*.png"],
+            "matches": ["<all_urls>"]
         }
     ],
     "options_page": "./options.html",

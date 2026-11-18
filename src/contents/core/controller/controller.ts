@@ -44,12 +44,12 @@ class CloseButton extends AButton {
 
 class TimeDisplay {
     private readonly m_elem: HTMLSpanElement;
-    private m_currentFlooredTime: number = -1;
-    private m_currentFormattedTime: string = "00:00";
-    private m_formattedDuration: string = "00:00";
+    private m_currIntTime: number = -1;
+    private m_currStrTime: string = "00:00";
+    private m_strDuration: string = "00:00";
 
     private genFormatted(): string {
-        return `${this.m_currentFormattedTime}/${this.m_formattedDuration}`;
+        return `${this.m_currStrTime}/${this.m_strDuration}`;
     }
 
     get element(): HTMLSpanElement { return this.m_elem; }
@@ -92,23 +92,23 @@ class TimeDisplay {
     }
 
     public updateDuration(sec: number) {
-        this.m_formattedDuration = TimeDisplay.formatTime(Math.floor(sec));
+        this.m_strDuration = TimeDisplay.formatTime(Math.floor(sec));
         this.m_elem.innerText = this.genFormatted();
     }
 
     public updateTime(sec: number) {
         const floored = Math.floor(sec);
-        if (floored === this.m_currentFlooredTime) {
+        if (floored === this.m_currIntTime) {
             return;
         }
 
-        this.m_currentFlooredTime = floored;
-        this.m_currentFormattedTime = TimeDisplay.formatTime(floored);
+        this.m_currIntTime = floored;
+        this.m_currStrTime = TimeDisplay.formatTime(floored);
         this.m_elem.innerText = this.genFormatted();
     }
 };
 
-class VideoSlider {
+class ProgressBar {
     private readonly m_elem: HTMLInputElement;
     private m_length: number = 100;
 
@@ -122,49 +122,45 @@ class VideoSlider {
         this.m_elem.classList.add("progress-bar");
     }
 
-    public setRange(range: number) {
+    public updateRange(range: number) {
         this.m_elem.max = String(range);
     }
 
-    public setTime(sec: number) {
+    public updateTime(sec: number) {
         this.m_elem.value = String(sec);
     }
+    
     public getTime() {
         return Number(this.m_elem.value);
     }
 };
 
 export class Controller {
+    private readonly m_wnd: Window;
     private readonly m_videoCtrler: VideoController;
 
-    private readonly m_controllerFrame: HTMLDivElement;
+    private readonly m_ctrlerFrame: HTMLDivElement;
 
     private readonly m_playButton: PlayButton;
     private readonly m_timeDisplay: TimeDisplay;
-    private readonly m_progressBar: VideoSlider;
+    private readonly m_progressBar: ProgressBar;
     private readonly m_closeButton: CloseButton;
 
-    private onClickClose: () => void;
-
-    get element(): HTMLDivElement { return this.m_controllerFrame; }
+    get element(): HTMLDivElement { return this.m_ctrlerFrame; }
 
     constructor(wnd: Window, vc: VideoController) {
         const doc = wnd.document;
 
-        this.onClickClose = () => {
-            wnd.close();
-            window.focus();
-        };
-
+        this.m_wnd = wnd;
         this.m_videoCtrler = vc;
 
-        this.m_controllerFrame = doc.createElement("div");
-        this.m_controllerFrame.id = "ctrler";
-        this.m_controllerFrame.classList.add("controller");
+        this.m_ctrlerFrame = doc.createElement("div");
+        this.m_ctrlerFrame.id = "ctrler";
+        this.m_ctrlerFrame.classList.add("controller");
 
         const config = ConfigHolder.getConfig();
         if (config) {
-            this.m_controllerFrame.classList.add(`controller-thema--${config.useDarkThema ? "dark": "light"}`);
+            this.m_ctrlerFrame.classList.add(`controller-thema--${config.useDarkThema ? "dark": "light"}`);
         }
 
         const leftSideControl = doc.createElement("div");
@@ -177,7 +173,7 @@ export class Controller {
         leftSideControl.appendChild(this.m_playButton.element);
         leftSideControl.appendChild(this.m_timeDisplay.element);
 
-        this.m_progressBar = new VideoSlider(doc);
+        this.m_progressBar = new ProgressBar(doc);
 
         const rightSideControl = doc.createElement("div");
         rightSideControl.classList.add("controller__right");
@@ -185,20 +181,34 @@ export class Controller {
         this.m_closeButton = new CloseButton(doc);
         rightSideControl.appendChild(this.m_closeButton.element);
 
-        this.m_controllerFrame.appendChild(leftSideControl);
-        this.m_controllerFrame.appendChild(this.m_progressBar.element);
-        this.m_controllerFrame.appendChild(rightSideControl);
+        this.m_ctrlerFrame.appendChild(leftSideControl);
+        this.m_ctrlerFrame.appendChild(this.m_progressBar.element);
+        this.m_ctrlerFrame.appendChild(rightSideControl);
 
         this.initHandlers();
     }
 
     private initHandlers(): void {
-        this.m_playButton.element.addEventListener("pointerup", this.onClickPlayPause);
+        this.m_playButton.element.addEventListener("pointerup", this.onClickPlayBtn);
         this.m_progressBar.element.addEventListener("input", this.onSeek);
-        this.m_closeButton.element.addEventListener("pointerup", this.onClickClose);
+        this.m_closeButton.element.addEventListener("pointerup", () => {
+            // const prms = chrome.runtime.sendMessage({ action: "switchWindow" });
+            // prms.then((wnd) => console.log(wnd));
+            console.log("clicked");
+            // chrome.runtime.sendMessage({ action: "switchWindow" }, (res) => {
+            //     console.log(res);
+            // });
+            const rtn = chrome.runtime.sendMessage({ action: "test", visible: document.visibilityState });
+            rtn.then((val) => {
+                console.log(val);
+            }).catch((reason) => {
+                console.error(reason);
+            });
+            console.log("sent");
+        });
     }
 
-    private onClickPlayPause = () => {
+    private onClickPlayBtn = () => {
         const { state } = this.m_videoCtrler.togglePlaying();
         switch (state) {
             case "invalid":
@@ -209,10 +219,15 @@ export class Controller {
                 this.m_playButton.setState(false);
                 break;
         }
-    }
+    };
 
     private onSeek = () => {
-        this.m_videoCtrler.setVideoCurrent(this.m_progressBar.getTime());
+        this.m_videoCtrler.setCurrentPos(this.m_progressBar.getTime());
+    };
+
+    private onClickCloseBtn = () => {
+        this.m_wnd.close();
+        window.focus();
     };
 
     public setPaused(paused: boolean) {
@@ -220,12 +235,12 @@ export class Controller {
     }
 
     public setDuration(duration: number) {
-        this.m_progressBar.setRange(duration);
+        this.m_progressBar.updateRange(duration);
         this.m_timeDisplay.updateDuration(duration);
     }
 
     public setCurTime(sec: number) {
-        this.m_progressBar.setTime(sec);
+        this.m_progressBar.updateTime(sec);
         this.m_timeDisplay.updateTime(sec);
     }
 };

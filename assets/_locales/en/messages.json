@@ -25,5 +25,11 @@
     },
     "clickToPlay": {
         "message": "Enable to click the player to toggle play"
+    },
+    "unshowThumbnail": {
+        "message": "Using Picture in Picture, Un-show thumbnali while"
+    },
+    "launchAutomatically": {
+        "message": "Automatically launch Picture in Picture in nicovideo.jp"
     }
 }
