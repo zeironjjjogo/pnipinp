@@ -26,9 +26,6 @@
     "clickToPlay": {
         "message": "プレイヤーをクリックで再生を切り替える"
     },
-    "unshowThumbnail": {
-        "message": "ピクチャーインピクチャー表示中、元の位置にサムネイルを表示しない"
-    },
     "launchAutomatically": {
         "message": "nicovideo.jpで自動的にピクチャーインピクチャーを起動する"
     }

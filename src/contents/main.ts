@@ -22,7 +22,7 @@ const main = async () => {
 
         const pipWin = window.documentPictureInPicture.window || await window.documentPictureInPicture.requestWindow({ disallowReturnToOpener: true });
         const pipDoc = pipWin.document;
-        chrome.runtime.sendMessage({ action: "createdPiP" });
+        chrome.runtime.sendMessage({ action: "createdPiP", url: window.location.href });
 
         if (pipDoc.body.hasChildNodes()) {
             console.log("Already initialized.");
@@ -135,7 +135,9 @@ const main = async () => {
         console.error(e);
     }
 }
-navigator.mediaSession.setActionHandler("enterpictureinpicture" as MediaSessionAction, async () => {
-    main();
-});
+if (ConfigHolder.getConfig()?.launchAutomatically) {
+    navigator.mediaSession.setActionHandler("enterpictureinpicture" as MediaSessionAction, async () => {
+        main();
+    });
+}
 await main();

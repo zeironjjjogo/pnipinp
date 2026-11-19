@@ -1,4 +1,4 @@
-let g_pipTab = {};
+let g_srcTab = {};
 let g_pipWnd = {};
 let vsb_hst = {
     before: {
@@ -20,15 +20,15 @@ const AllType = [
 
 function constName(id) {
     if (id === chrome.windows.WINDOW_ID_NONE) return `NONE(${id})`;
-    if (id === g_pipTab.id) return `CurTab(${id})`;
-    if (id === g_pipTab.windowId) return `CurWnd(${id})`;
+    if (id === g_srcTab.id) return `SrcTab(${id})`;
+    if (id === g_srcTab.windowId) return `SrcWnd(${id})`;
     if (id === g_pipWnd.id) return `PiPWnd(${id})`;
     return id;
 }
 
 chrome.action.onClicked.addListener(async (tab) => {
     if (!tab.id) return;
-    g_pipTab = tab;
+    g_srcTab = tab;
     await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ["main.js"]
@@ -127,22 +127,41 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     //     } catch (error) {
     //         console.error(error);
     //     }
-    // } else 
-    if (message.action === "test") {
+    // } else
+    if (message.action === "light") {
+        try {
+            const now = performance.now();
+            const latestVisility = PiPHasFocus || now - vsb_hst.current.stamp < 200 ? vsb_hst.before.visible : vsb_hst.current.visible;
+            const srcWnd = await chrome.windows.get(g_srcTab.windowId);
+            const activeTab = await chrome.tabs.get(g_srcTab.id);
+            const doesFocusTab = !activeTab.active;
+            const doesFocusWnd = message.closing || srcWnd.state === "minimized" || !latestVisility;
+            const updateInfo = doesFocusWnd ? { focused: true } : { state: "minimized" };
+            await chrome.windows.update(srcWnd.id, updateInfo);
+            if (doesFocusTab) {
+                await chrome.tabs.update(g_srcTab.id, { active: true });
+            }
+            sendResponse(updateInfo);
+        } catch (err) {
+            console.error(err);
+        }
+    } 
+    else if (message.action === "test") {
         try {
             const now = performance.now();
             const lastVisible = PiPHasFocus || now - vsb_hst.current.stamp < 200 ? vsb_hst.before.visible : vsb_hst.current.visible;
             console.log("lastVisible: ", lastVisible, "diff: ", now - vsb_hst.current.stamp);
             console.log("pip have focus: ", PiPHasFocus);
-            console.log(g_pipTab.id, g_pipTab.windowId);
-            console.log(g_pipTab, g_pipWnd);
+            console.log(g_srcTab.id, g_srcTab.windowId);
+            console.log(g_srcTab, g_pipWnd);
 
-            const srcWnd = await chrome.windows.get(g_pipTab.windowId);
-            const [tab] = await chrome.tabs.query({ active: true });
-            if (!tab || tab.id !== g_pipTab.id) {
+            const srcWnd = await chrome.windows.get(g_srcTab.windowId);
+            const tabs = await chrome.tabs.query({ active: true, windowId: srcWnd.id }); console.log(tabs);
+            const tab = tabs[0];
+            if (!tab || tab.id !== g_srcTab.id) {
                 console.log("Current tab is not src tab.");
             }
-            const doesActivateTab = !tab || tab.id !== g_pipTab.id;
+            const doesActivateTab = !tab || tab.id !== g_srcTab.id;
             const doesShow = message.closing || srcWnd.state === "minimized" ? true : !lastVisible;
             const updateInfo = { state: doesShow ? "maximized" : "minimized" };
 
@@ -155,7 +174,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 await chrome.windows.update(srcWnd.id, { focused: true });
                 if (doesActivateTab) {
                     console.log("To activate the tab");
-                    await chrome.tabs.update(g_pipTab.id, { active: true });
+                    await chrome.tabs.update(g_srcTab.id, { active: true });
                 }
             }
             sendResponse();
@@ -181,14 +200,31 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     } else if (message.action === "onBlurPiP") {
         PiPHasFocus = false;
     } else if (message.action === "createdPiP") {
-        const [tab] = await chrome.tabs.query({ active: false });
-        const cur = await chrome.windows.getCurrent();
-        console.log(tab, cur);
+        const tabs = await chrome.tabs.query({});
+        const tab = sender.tab || tabs.find(t => t.url === message.url);
+
+        if (!tab) {
+            console.log("Failed to get source tab.");
+        } else if (sender.tab) {
+            console.log("Got the tab from sender.");
+        } else {
+            console.log("Got the tab from result of query.");
+        }
+
+        if (tab) {
+            g_srcTab = tab;
+            const pipTab = tabs.filter(t => t.openerTabId === tab.id && t.windowId !== tab.windowId)[0];
+            console.log("tabs: ", pipTab, tabs);
+            g_pipWnd = await chrome.windows.get(pipTab.windowId);
+        }
+
+        console.log(g_srcTab, g_pipWnd);
+
     } else {
         console.log(message.action);
     }
     if (message.closing) {
-        g_pipTab = {};
+        g_srcTab = {};
         g_pipWnd = {};
         vsb_hst = {
             before: {

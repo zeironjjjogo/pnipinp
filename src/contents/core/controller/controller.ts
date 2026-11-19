@@ -199,7 +199,7 @@ export class Controller {
             //     console.log(res);
             // });
             this.m_videoCtrler.requestStopOnNextUnset(false);
-            const rtn = chrome.runtime.sendMessage({ action: "test", closing: e.ctrlKey, visible: document.visibilityState });
+            const rtn = chrome.runtime.sendMessage({ action: "light", closing: e.ctrlKey });
             rtn.then((val) => {
                 console.log(val);
             }).catch((reason) => {
