@@ -191,21 +191,16 @@ export class Controller {
     private initHandlers(): void {
         this.m_playButton.element.addEventListener("pointerup", this.onClickPlayBtn);
         this.m_progressBar.element.addEventListener("input", this.onSeek);
-        this.m_closeButton.element.addEventListener("pointerup", (e) => {
-            // const prms = chrome.runtime.sendMessage({ action: "switchWindow" });
-            // prms.then((wnd) => console.log(wnd));
+        this.m_closeButton.element.addEventListener("pointerup", async (e) => {
             console.log("clicked");
-            // chrome.runtime.sendMessage({ action: "switchWindow" }, (res) => {
-            //     console.log(res);
-            // });
             this.m_videoCtrler.requestStopOnNextUnset(false);
-            const rtn = chrome.runtime.sendMessage({ action: "light", closing: e.ctrlKey });
-            rtn.then((val) => {
-                console.log(val);
-            }).catch((reason) => {
-                console.error(reason);
-            });
-            console.log("sent");
+            try {
+                const retVal = await chrome.runtime.sendMessage({ action: "switchWindow", closing: e.ctrlKey });
+                console.log("Successfully sent", retVal);
+            } catch (err) {
+                console.error(err);
+            }
+            
             if (e.ctrlKey) {
                 console.log("to close");
                 this.m_wnd.close();
