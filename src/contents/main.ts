@@ -135,9 +135,9 @@ const main = async () => {
         console.error(e);
     }
 }
-if (ConfigHolder.getConfig()?.launchAutomatically) {
+// if (ConfigHolder.getConfig()?.launchAutomatically) {
     navigator.mediaSession.setActionHandler("enterpictureinpicture" as MediaSessionAction, async () => {
         main();
     });
-}
+// }
 await main();
